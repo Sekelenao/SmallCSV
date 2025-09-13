@@ -376,6 +376,17 @@ final class SkCsvRowTest {
     final class IterableTest {
 
         @Test
+        @DisplayName("Empty iterator")
+        void emptyIterator() {
+            var row = new SkCsvRow();
+            var it = row.iterator();
+            assertAll(
+                () -> assertFalse(it.hasNext()),
+                () -> assertThrows(NoSuchElementException.class, it::next)
+            );
+        }
+
+        @Test
         @DisplayName("For each loop is working")
         void iterableFor() {
             var lst = new ArrayList<String>();

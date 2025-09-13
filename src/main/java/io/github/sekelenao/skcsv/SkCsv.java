@@ -418,7 +418,64 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return a list iterator over the rows in this SkCsv instance, starting at the beginning of the list
      */
     public ListIterator<SkCsvRow> listIterator() {
-        return listIterator(0);
+        return new ListIterator<>() {
+
+            private final ListIterator<SkCsvRow> lstItr = internalRows.listIterator();
+
+            @Override
+            public boolean hasNext() {
+                return lstItr.hasNext();
+            }
+
+            @Override
+            public SkCsvRow next() {
+                return lstItr.next();
+            }
+
+            @Override
+            public boolean hasPrevious() {
+                return lstItr.hasPrevious();
+            }
+
+            @Override
+            public SkCsvRow previous() {
+                return lstItr.previous();
+            }
+
+            @Override
+            public int nextIndex() {
+                return lstItr.nextIndex();
+            }
+
+            @Override
+            public int previousIndex() {
+                return lstItr.previousIndex();
+            }
+
+            @Override
+            public void remove() {
+                lstItr.remove();
+            }
+
+            @Override
+            public void set(SkCsvRow row) {
+                Objects.requireNonNull(row);
+                lstItr.set(row);
+            }
+
+            @Override
+            public void add(SkCsvRow row) {
+                Objects.requireNonNull(row);
+                lstItr.add(row);
+            }
+
+            @Override
+            public void forEachRemaining(Consumer<? super SkCsvRow> action) {
+                Objects.requireNonNull(action);
+                lstItr.forEachRemaining(action);
+            }
+
+        };
     }
 
     /**

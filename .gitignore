@@ -1,10 +1,10 @@
+# MANDATORY
+gpg
+
 #DIRECTORIES
 target/
 bin/
 .idea/
-
-#FILES
-DefinitionOfDoneToDeploy.txt
 
 #PATTERNS
 *.iml
