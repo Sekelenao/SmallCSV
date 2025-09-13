@@ -15,6 +15,16 @@ SkCsv is a library designed for easy data manipulation, simplifying the import a
 worry about special characters or other complexities during parsing. The focus has been directed towards prioritizing
 speed and security. The level of abstraction allows you to forget that you're working with a CSV format.
 
+## Changelog
+
+### 1.0.0
+
+Initial release.
+
+### 1.0.1
+
+Fixed a bug when trying to iterate over an empty CSV file.
+
 ## How to install
 
 ### Using Maven
