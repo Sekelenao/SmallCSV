@@ -6,7 +6,7 @@
   SkCsv library for Java 17+
 </h1>
 <h3 align="center">
-  Latest version : 1.0.0
+  Latest version : 1.0.1
 </h3>
 
 ## Description
