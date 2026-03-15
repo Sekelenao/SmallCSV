@@ -1,10 +1,13 @@
-# MANDATORY
-gpg
-
-#DIRECTORIES
+### JAVA ###
 target/
-bin/
+*.class
+*.jar
+*.war
+### MAVEN ###
+.mvn/
+### INTELLIJ IDEA ###
 .idea/
-
-#PATTERNS
+!.idea/icon.svg
 *.iml
+### PERSONAL ###
+*.private

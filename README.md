@@ -1,13 +1,16 @@
 <p align="center">
-  <img src="logoSK.svg" width="100" alt="logo">
+  <img src=".idea/icon.svg" width="100" alt="logo">
 </p>
 
-<h1 align="center">
-  SkCsv library for Java 17+
-</h1>
-<h3 align="center">
-  Latest version : 1.0.1
-</h3>
+<h2 align="center">
+CSV as simple as it is
+</h2>
+
+[![Java](https://img.shields.io/badge/Java_21%2B-%23ED8B00.svg?logo=openjdk&logoColor=white)](https://docs.oracle.com/en/java/javase/21/docs/api/index.html)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.sekelenao/SkCsv?label=Maven%20central&logo=apachemaven&logoColor=white&color=C71A36&labelColor=C71A36)](https://central.sonatype.com/artifact/io.github.sekelenao/small-yaml)
+![Tests](https://raw.githubusercontent.com/Sekelenao/SmallCSV/badges/Tests.svg)
+![Coverage](https://raw.githubusercontent.com/Sekelenao/SmallCSV/badges/Coverage.svg)
+![Branches](https://raw.githubusercontent.com/Sekelenao/SmallCSV/badges/Branches.svg)
 
 ## Description
 

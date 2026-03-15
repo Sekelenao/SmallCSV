@@ -1,22 +1,25 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.internal;
 
-import io.github.sekelenao.skcsv.exception.CsvParsingException;
+import io.github.sekelenao.smallcsv.api.Csv;
+import io.github.sekelenao.smallcsv.api.CsvConfiguration;
+import io.github.sekelenao.smallcsv.api.Row;
+import io.github.sekelenao.smallcsv.api.exception.CsvParsingException;
 
 import java.util.Objects;
 
-final class CsvFormatter {
+public final class CsvFormatter {
 
     private static final class CsvBuffer {
 
-        private final SkCsv csv;
+        private final Csv csv;
 
-        private SkCsvRow row;
+        private Row row;
 
         private StringBuilder cell;
 
         private CsvBuffer() {
-            this.csv = new SkCsv();
-            this.row = new SkCsvRow();
+            this.csv = new Csv();
+            this.row = new Row();
             this.cell = new StringBuilder();
         }
 
@@ -30,8 +33,8 @@ final class CsvFormatter {
         }
 
         private void pushRow(){
-            csv.add(row);
-            row = new SkCsvRow();
+            csv.addLast(row);
+            row = new Row();
         }
 
         private boolean notEmpty() {
@@ -46,7 +49,7 @@ final class CsvFormatter {
     private final char delimiter;
     private QuoteState quoteState = QuoteState.OUT;
 
-    CsvFormatter(SkCsvConfig configuration) {
+    public CsvFormatter(CsvConfiguration configuration) {
         Objects.requireNonNull(configuration);
         this.quote = configuration.quote();
         this.delimiter = configuration.delimiter();
@@ -82,7 +85,7 @@ final class CsvFormatter {
         Objects.requireNonNull(text);
         switch (quoteState){
             case OUT -> {
-                SkAssertions.validChar(c);
+                Assertions.isValidChar(c);
                 buffer.appendToCell(c);
             }
             case IN -> buffer.appendToCell(c);
@@ -90,7 +93,7 @@ final class CsvFormatter {
         }
     }
 
-    SkCsv split(Iterable<String> lines){
+    public Csv split(Iterable<String> lines){
         Objects.requireNonNull(lines);
         quoteState = QuoteState.OUT;
         var buffer = new CsvBuffer();
@@ -114,7 +117,7 @@ final class CsvFormatter {
         return buffer.csv;
     }
 
-    static boolean isEscapedChar(char character) {
+    public static boolean isEscapedChar(char character) {
         return switch (character) {
             case '\n', '\r', '\b', '\f', '\0'-> true;
             default -> false;
@@ -139,7 +142,7 @@ final class CsvFormatter {
         return formatted.toString();
     }
 
-    String toCsvString(Iterable<String> values) {
+    public String toCsvString(Iterable<String> values) {
         var csvString = new StringBuilder();
         var joiner = "";
         for (var value : values) {

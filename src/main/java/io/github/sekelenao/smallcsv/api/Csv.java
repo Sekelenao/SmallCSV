@@ -1,4 +1,7 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.api;
+
+import io.github.sekelenao.smallcsv.internal.Assertions;
+import io.github.sekelenao.smallcsv.internal.CsvFormatter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -17,76 +20,95 @@ import java.util.stream.StreamSupport;
  * Represents a CSV (Comma-Separated Values) file consisting of multiple rows.
  * This class provides methods to manipulate and access rows within the CSV.
  *
- * <p>Instances of this class use a default configuration {@link SkCsvConfig#SEMICOLON SEMICOLON} with a semicolon as
+ * <p>Instances of this class use a default configuration {@link CsvConfiguration#SEMICOLON SEMICOLON} with a semicolon as
  * the delimiter and double quotes for quoting fields. The configuration can be customized as needed.
  *
  * <p> Unlike individual rows, which implement {@code RandomAccess}, this class does not guarantee constant time access.
  *
  * <p>Null values are not permitted in instances of this class, ensuring consistency in data processing.
  */
-public class SkCsv implements Iterable<SkCsvRow> {
+public class Csv implements Iterable<Row> {
 
     /**
      * The internal list of rows in this CSV.
      * Each element in the list represents a single row.
      */
-    private final LinkedList<SkCsvRow> internalRows = new LinkedList<>();
+    private final ArrayList<Row> rows;
 
     /**
      * The configuration used for formatting this CSV data.
      */
-    private SkCsvConfig config = SkCsvConfig.SEMICOLON;
+    private CsvConfiguration config = CsvConfiguration.SEMICOLON;
 
     /**
-     * Constructs an empty SkCsv instance with the default configuration {@link SkCsvConfig#SEMICOLON SEMICOLON} with
+     * Constructs an empty SkCsv instance with the default configuration {@link CsvConfiguration#SEMICOLON SEMICOLON} with
      * a semicolon as the delimiter and double quotes for quoting fields.
      */
-    public SkCsv() {
+    public Csv() {
+        this.rows = new ArrayList<>();
     }
 
     /**
      * Constructs an SkCsv instance initialized with the specified rows and the default configuration
-     * {@link SkCsvConfig#SEMICOLON SEMICOLON} with a semicolon as the delimiter and double quotes for quoting fields.
+     * {@link CsvConfiguration#SEMICOLON SEMICOLON} with a semicolon as the delimiter and double quotes for quoting fields.
      *
      * <p>The provided array of rows is copied, so subsequent changes to the array do not affect this SkCsv instance.
      *
      * @param rows the array of rows to initialize the CSV
      * @throws NullPointerException if the specified array or any of its elements is null
      */
-    public SkCsv(SkCsvRow... rows) {
+    public Csv(Row... rows) {
         Objects.requireNonNull(rows);
+        this.rows = new ArrayList<>(rows.length);
         for (var row : rows) {
             Objects.requireNonNull(row);
-            internalRows.add(row);
+            this.rows.add(row);
+        }
+    }
+
+    /**
+     * Constructs a new Csv object with the specified collection of rows.
+     *
+     * @param rows the collection of Row objects to be included in the CSV.
+     *             Must not be null.
+     * @throws NullPointerException if the provided rows collection is null.
+     */
+    public Csv(Collection<Row> rows) {
+        Objects.requireNonNull(rows);
+        this.rows = new ArrayList<>(rows.size());
+        for (var row : rows) {
+            Objects.requireNonNull(row);
+            this.rows.add(row);
         }
     }
 
     /**
      * Constructs an SkCsv instance initialized with the specified iterable of row and the default configuration
-     * {@link SkCsvConfig#SEMICOLON SEMICOLON} with a semicolon as the delimiter and double quotes for quoting fields.
+     * {@link CsvConfiguration#SEMICOLON SEMICOLON} with a semicolon as the delimiter and double quotes for quoting fields.
      *
-     * <p>The provided iterable of rows is copied, so subsequent changes to the iterable do not affect this SkCsv instance.
+     * <p>The provided iterable of rows is copied, so later changes to the iterable do not affect this SkCsv instance.
      *
      * @param rows the iterable of rows to initialize the CSV
      * @throws NullPointerException if the specified iterable or any of its elements is null
      */
-    public SkCsv(Iterable<SkCsvRow> rows) {
+    public Csv(Iterable<Row> rows) {
         Objects.requireNonNull(rows);
+        this.rows = new ArrayList<>();
         for (var row : rows) {
             Objects.requireNonNull(row);
-            internalRows.add(row);
+            this.rows.add(row);
         }
     }
 
     /**
      * Sets the configuration for this SkCsv instance.
      *
-     * @param config the new configuration to be applied
+     * @param configuration the new configuration to be applied
      * @return this SkCsv instance with the updated configuration
      * @throws NullPointerException if the specified configuration is null
      */
-    public SkCsv configure(SkCsvConfig config) {
-        this.config = Objects.requireNonNull(config);
+    public Csv configure(CsvConfiguration configuration) {
+        this.config = Objects.requireNonNull(configuration);
         return this;
     }
 
@@ -95,7 +117,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      *
      * @return the current configuration
      */
-    public SkCsvConfig configuration() {
+    public CsvConfiguration configuration() {
         return config;
     }
 
@@ -105,7 +127,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return the number of rows
      */
     public int size() {
-        return internalRows.size();
+        return rows.size();
     }
 
     /**
@@ -114,7 +136,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return {@code true} if this SkCsv contains no rows, {@code false} otherwise
      */
     public boolean isEmpty() {
-        return internalRows.isEmpty();
+        return rows.isEmpty();
     }
 
     /**
@@ -123,9 +145,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @param row the row to be added
      * @throws NullPointerException if the specified row is null
      */
-    public void add(SkCsvRow row) {
+    public void addLast(Row row) {
         Objects.requireNonNull(row);
-        internalRows.addLast(row);
+        rows.addLast(row);
     }
 
     /**
@@ -134,23 +156,23 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @param row the row to be added
      * @throws NullPointerException if the specified row is null
      */
-    public void addFirst(SkCsvRow row){
+    public void addFirst(Row row){
         Objects.requireNonNull(row);
-        internalRows.addFirst(row);
+        rows.addFirst(row);
     }
 
     /**
      * Adds all specified rows to this SkCsv instance.
-     * The provided array of rows is copied, so subsequent changes to the array do not affect this SkCsv instance.
+     * The provided array of rows is copied, so later changes to the array do not affect this SkCsv instance.
      *
      * @param rows the array of rows to be added
      * @throws NullPointerException if the specified array or any of its elements is null
      */
-    public void addAll(SkCsvRow... rows) {
+    public void addAll(Row... rows) {
         Objects.requireNonNull(rows);
         for (var row : rows) {
             Objects.requireNonNull(row);
-            internalRows.add(row);
+            this.rows.add(row);
         }
     }
 
@@ -161,11 +183,11 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @param rows the iterable of rows to be added
      * @throws NullPointerException if the specified iterable or any of its elements is null
      */
-    public void addAll(Iterable<SkCsvRow> rows) {
+    public void addAll(Iterable<Row> rows) {
         Objects.requireNonNull(rows);
         for (var row : rows) {
             Objects.requireNonNull(row);
-            internalRows.add(row);
+            this.rows.add(row);
         }
     }
 
@@ -173,17 +195,17 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * Inserts a single row at the specified position in this SkCsv instance.
      *
      * <p><strong>Note:</strong> This method does not provide constant-time access (O(1)). If the function needs to be
-     * called multiple times, using a {@code ListIterator} via the {@link SkCsv#listIterator()} method may be preferable.
+     * called multiple times, using a {@code ListIterator} via the {@link Csv#listIterator()} method may be preferable.
      *
      * @param position the position at which the row is to be inserted
      * @param row      the row to be inserted
      * @throws IllegalArgumentException if the position is invalid
      * @throws NullPointerException     if the specified row is null
      */
-    public void insert(int position, SkCsvRow row) {
-        SkAssertions.validPosition(position, internalRows.size());
+    public void insert(int position, Row row) {
+        Assertions.validPosition(position, rows.size());
         Objects.requireNonNull(row);
-        internalRows.add(position, row);
+        rows.add(position, row);
     }
 
     /**
@@ -191,17 +213,17 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * The provided array of rows is copied, so subsequent changes to the array do not affect this SkCsv instance.
      *
      * <p><strong>Note:</strong> This method does not provide constant-time access (O(1)). If the function needs to be
-     * called multiple times, using a {@code ListIterator} via the {@link SkCsv#listIterator()} method may be preferable.
+     * called multiple times, using a {@code ListIterator} via the {@link Csv#listIterator()} method may be preferable.
      *
      * @param position the position at which the rows are to be inserted
      * @param rows     the array of rows to be inserted
      * @throws IllegalArgumentException if the position is invalid
      * @throws NullPointerException     if the specified array or any of its elements is null
      */
-    public void insertAll(int position, SkCsvRow... rows) {
-        SkAssertions.validPosition(position, this.internalRows.size());
+    public void insertAll(int position, Row... rows) {
+        Assertions.validPosition(position, this.rows.size());
         Objects.requireNonNull(rows);
-        var lstItr = internalRows.listIterator(position);
+        var lstItr = this.rows.listIterator(position);
         for (var row : rows) {
             Objects.requireNonNull(row);
             lstItr.add(row);
@@ -213,17 +235,17 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * The provided iterable of rows is copied, so subsequent changes to the iterable do not affect this SkCsv instance.
      *
      * <p><strong>Note:</strong> This method does not provide constant-time access (O(1)). If the function needs to be
-     * called multiple times, using a {@code ListIterator} via the {@link SkCsv#listIterator()} method may be preferable.
+     * called multiple times, using a {@code ListIterator} via the {@link Csv#listIterator()} method may be preferable.
      *
      * @param position the position at which the rows are to be inserted
      * @param rows     the iterable of rows to be inserted
      * @throws IllegalArgumentException if the position is invalid
      * @throws NullPointerException     if the specified iterable or any of its elements is null
      */
-    public void insertAll(int position, Iterable<SkCsvRow> rows) {
-        SkAssertions.validPosition(position, this.internalRows.size());
+    public void insertAll(int position, Iterable<Row> rows) {
+        Assertions.validPosition(position, this.rows.size());
         Objects.requireNonNull(rows);
-        var lstItr = internalRows.listIterator(position);
+        var lstItr = this.rows.listIterator(position);
         for (var row : rows) {
             Objects.requireNonNull(row);
             lstItr.add(row);
@@ -241,25 +263,25 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws IndexOutOfBoundsException if the index is out of range
      * @throws NullPointerException      if the specified row is null
      */
-    public void set(int index, SkCsvRow row) {
-        Objects.checkIndex(index, internalRows.size());
+    public void set(int index, Row row) {
+        Objects.checkIndex(index, rows.size());
         Objects.requireNonNull(row);
-        internalRows.set(index, row);
+        rows.set(index, row);
     }
 
     /**
      * Returns the row at the specified position in this SkCsv instance.
      *
      * <p><strong>Note:</strong> This method does not provide constant-time access (O(1)). If the function needs to be
-     * called multiple times, using a {@code ListIterator} via the {@link SkCsv#listIterator()} method may be preferable.
+     * called multiple times, using a {@code ListIterator} via the {@link Csv#listIterator()} method may be preferable.
      *
      * @param index the index of the row to return
      * @return the row at the specified position in this SkCsv instance
      * @throws IndexOutOfBoundsException if the index is out of range
      */
-    public SkCsvRow get(int index) {
-        Objects.checkIndex(index, internalRows.size());
-        return internalRows.get(index);
+    public Row get(int index) {
+        Objects.checkIndex(index, rows.size());
+        return rows.get(index);
     }
 
     /**
@@ -268,9 +290,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return the first row in this SkCsv instance
      * @throws NoSuchElementException if this SkCsv instance is empty
      */
-    public SkCsvRow getFirst() {
-        if (internalRows.isEmpty()) throw new NoSuchElementException();
-        return internalRows.getFirst();
+    public Row getFirst() {
+        if (rows.isEmpty()) throw new NoSuchElementException();
+        return rows.getFirst();
     }
 
     /**
@@ -279,23 +301,23 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return the last row in this SkCsv instance
      * @throws NoSuchElementException if this SkCsv instance is empty
      */
-    public SkCsvRow getLast() {
-        if (internalRows.isEmpty()) throw new NoSuchElementException();
-        return internalRows.getLast();
+    public Row getLast() {
+        if (rows.isEmpty()) throw new NoSuchElementException();
+        return rows.getLast();
     }
 
     /**
      * Removes the row at the specified position in this SkCsv instance.
      *
      * <p><strong>Note:</strong> This method does not provide constant-time access (O(1)). If the function needs to be
-     * called multiple times, using a {@code ListIterator} via the {@link SkCsv#listIterator()} method may be preferable.
+     * called multiple times, using a {@code ListIterator} via the {@link Csv#listIterator()} method may be preferable.
      *
      * @param index the index of the row to be removed
      * @throws IndexOutOfBoundsException if the index is out of range
      */
     public void remove(int index) {
-        Objects.checkIndex(index, internalRows.size());
-        internalRows.remove(index);
+        Objects.checkIndex(index, rows.size());
+        rows.remove(index);
     }
 
     /**
@@ -304,8 +326,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws NoSuchElementException if this SkCsv instance is empty
      */
     public void removeFirst() {
-        if (internalRows.isEmpty()) throw new NoSuchElementException();
-        internalRows.removeFirst();
+        if (rows.isEmpty()) throw new NoSuchElementException();
+        rows.removeFirst();
     }
 
     /**
@@ -314,8 +336,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws NoSuchElementException if this SkCsv instance is empty
      */
     public void removeLast() {
-        if (internalRows.isEmpty()) throw new NoSuchElementException();
-        internalRows.removeLast();
+        if (rows.isEmpty()) throw new NoSuchElementException();
+        rows.removeLast();
     }
 
     /**
@@ -325,8 +347,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return {@code true} if any rows were removed as a result of this call, {@code false} otherwise
      * @throws NullPointerException if the specified predicate is null
      */
-    public boolean removeIf(Predicate<? super SkCsvRow> filter) {
-        return internalRows.removeIf(Objects.requireNonNull(filter));
+    public boolean removeIf(Predicate<? super Row> filter) {
+        return rows.removeIf(Objects.requireNonNull(filter));
     }
 
     /**
@@ -338,7 +360,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return {@code true} if this SkCsv instance contains the specified object, {@code false} otherwise
      */
     public boolean contains(Object object) {
-        return object != null && internalRows.stream().anyMatch(object::equals);
+        return object != null && rows.stream().anyMatch(object::equals);
     }
 
     /**
@@ -350,11 +372,11 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return a list iterator over the rows in this SkCsv instance, starting at the specified position in the list
      * @throws IndexOutOfBoundsException if the index is out of range
      */
-    public ListIterator<SkCsvRow> listIterator(int index) {
-        Objects.checkIndex(index, internalRows.size());
+    public ListIterator<Row> listIterator(int index) {
+        Objects.checkIndex(index, rows.size());
         return new ListIterator<>() {
 
-            private final ListIterator<SkCsvRow> lstItr = internalRows.listIterator(index);
+            private final ListIterator<Row> lstItr = rows.listIterator(index);
 
             @Override
             public boolean hasNext() {
@@ -362,7 +384,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
             }
 
             @Override
-            public SkCsvRow next() {
+            public Row next() {
                 return lstItr.next();
             }
 
@@ -372,7 +394,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
             }
 
             @Override
-            public SkCsvRow previous() {
+            public Row previous() {
                 return lstItr.previous();
             }
 
@@ -392,19 +414,19 @@ public class SkCsv implements Iterable<SkCsvRow> {
             }
 
             @Override
-            public void set(SkCsvRow row) {
+            public void set(Row row) {
                 Objects.requireNonNull(row);
                 lstItr.set(row);
             }
 
             @Override
-            public void add(SkCsvRow row) {
+            public void add(Row row) {
                 Objects.requireNonNull(row);
                 lstItr.add(row);
             }
 
             @Override
-            public void forEachRemaining(Consumer<? super SkCsvRow> action) {
+            public void forEachRemaining(Consumer<? super Row> action) {
                 Objects.requireNonNull(action);
                 lstItr.forEachRemaining(action);
             }
@@ -417,10 +439,10 @@ public class SkCsv implements Iterable<SkCsvRow> {
      *
      * @return a list iterator over the rows in this SkCsv instance, starting at the beginning of the list
      */
-    public ListIterator<SkCsvRow> listIterator() {
+    public ListIterator<Row> listIterator() {
         return new ListIterator<>() {
 
-            private final ListIterator<SkCsvRow> lstItr = internalRows.listIterator();
+            private final ListIterator<Row> lstItr = rows.listIterator();
 
             @Override
             public boolean hasNext() {
@@ -428,7 +450,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
             }
 
             @Override
-            public SkCsvRow next() {
+            public Row next() {
                 return lstItr.next();
             }
 
@@ -438,7 +460,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
             }
 
             @Override
-            public SkCsvRow previous() {
+            public Row previous() {
                 return lstItr.previous();
             }
 
@@ -458,19 +480,19 @@ public class SkCsv implements Iterable<SkCsvRow> {
             }
 
             @Override
-            public void set(SkCsvRow row) {
+            public void set(Row row) {
                 Objects.requireNonNull(row);
                 lstItr.set(row);
             }
 
             @Override
-            public void add(SkCsvRow row) {
+            public void add(Row row) {
                 Objects.requireNonNull(row);
                 lstItr.add(row);
             }
 
             @Override
-            public void forEachRemaining(Consumer<? super SkCsvRow> action) {
+            public void forEachRemaining(Consumer<? super Row> action) {
                 Objects.requireNonNull(action);
                 lstItr.forEachRemaining(action);
             }
@@ -484,7 +506,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return an iterator over the rows in this SkCsv instance, starting at the beginning of the list
      */
     @Override
-    public Iterator<SkCsvRow> iterator() {
+    public Iterator<Row> iterator() {
         return listIterator();
     }
 
@@ -496,9 +518,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws NullPointerException if the specified action is null
      */
     @Override
-    public void forEach(Consumer<? super SkCsvRow> action) {
+    public void forEach(Consumer<? super Row> action) {
         Objects.requireNonNull(action);
-        internalRows.forEach(action);
+        rows.forEach(action);
     }
 
     /**
@@ -510,8 +532,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return a {@code Spliterator} over the rows in this SkCsv instance
      */
     @Override
-    public Spliterator<SkCsvRow> spliterator() {
-        return Spliterators.spliterator(internalRows, Spliterator.NONNULL | Spliterator.SIZED | Spliterator.ORDERED);
+    public Spliterator<Row> spliterator() {
+        return Spliterators.spliterator(rows, Spliterator.NONNULL | Spliterator.SIZED | Spliterator.ORDERED);
     }
 
     /**
@@ -520,7 +542,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      *
      * @return a sequential {@code Stream} over the rows in this SkCsv instance
      */
-    public Stream<SkCsvRow> stream() {
+    public Stream<Row> stream() {
         return StreamSupport.stream(spliterator(), false);
     }
 
@@ -530,9 +552,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @param mapper the function to apply to each row
      * @throws NullPointerException if the specified mapper is null, or if the mapper returns null for any row
      */
-    public void map(Function<? super SkCsvRow, SkCsvRow> mapper) {
+    public void map(Function<? super Row, Row> mapper) {
         Objects.requireNonNull(mapper);
-        var lstItr = internalRows.listIterator();
+        var lstItr = rows.listIterator();
         while (lstItr.hasNext()) {
             var mappedValue = mapper.apply(lstItr.next());
             Objects.requireNonNull(mappedValue);
@@ -545,9 +567,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      *
      * @return a {@code Collector} that accumulates input elements into a new SkCsv instance
      */
-    public static Collector<SkCsvRow, ?, SkCsv> collector() {
+    public static Collector<Row, ?, Csv> collector() {
         return Collector.of(
-                SkCsv::new, SkCsv::addAll,
+                Csv::new, Csv::addAll,
                 (csv1, csv2) -> {
                     csv1.addAll(csv2);
                     return csv1;
@@ -566,8 +588,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws IOException if an I/O error occurs while reading the file
      * @throws NullPointerException if any of the specified arguments is null
      */
-    public static SkCsv from(Path path, SkCsvConfig config, Charset charset) throws IOException {
-        SkAssertions.requireNonNulls(path, config, charset);
+    public static Csv from(Path path, CsvConfiguration config, Charset charset) throws IOException {
+        Assertions.requireNonNulls(path, config, charset);
         var formatter = new CsvFormatter(config);
         return formatter.split(Files.readAllLines(path, charset));
     }
@@ -581,8 +603,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws IOException if an I/O error occurs while reading the file
      * @throws NullPointerException if any of the specified arguments is null
      */
-    public static SkCsv from(Path path, SkCsvConfig config) throws IOException {
-        SkAssertions.requireNonNulls(path, config);
+    public static Csv from(Path path, CsvConfiguration config) throws IOException {
+        Assertions.requireNonNulls(path, config);
         return from(path, config, Charset.defaultCharset());
     }
 
@@ -595,9 +617,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws IOException if an I/O error occurs while reading the file
      * @throws NullPointerException if any of the specified arguments is null
      */
-    public static SkCsv from(Path path, Charset charset) throws IOException {
-        SkAssertions.requireNonNulls(path, charset);
-        return from(path, SkCsvConfig.SEMICOLON, charset);
+    public static Csv from(Path path, Charset charset) throws IOException {
+        Assertions.requireNonNulls(path, charset);
+        return from(path, CsvConfiguration.SEMICOLON, charset);
     }
 
     /**
@@ -608,8 +630,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws IOException if an I/O error occurs while reading the file
      * @throws NullPointerException if the specified path is null
      */
-    public static SkCsv from(Path path) throws IOException {
-        return from(Objects.requireNonNull(path), SkCsvConfig.SEMICOLON);
+    public static Csv from(Path path) throws IOException {
+        return from(Objects.requireNonNull(path), CsvConfiguration.SEMICOLON);
     }
 
     /**
@@ -620,8 +642,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return a SkCsv instance containing the parsed rows
      * @throws NullPointerException if any of the specified arguments is null
      */
-    public static SkCsv from(Iterable<String> text, SkCsvConfig config) {
-        SkAssertions.requireNonNulls(text, config);
+    public static Csv from(Iterable<String> text, CsvConfiguration config) {
+        Assertions.requireNonNulls(text, config);
         var formatter = new CsvFormatter(config);
         return formatter.split(text);
     }
@@ -633,8 +655,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @return a SkCsv instance containing the parsed rows
      * @throws NullPointerException if the specified text is null
      */
-    public static SkCsv from(Iterable<String> text) {
-        return from(Objects.requireNonNull(text), SkCsvConfig.SEMICOLON);
+    public static Csv from(Iterable<String> text) {
+        return from(Objects.requireNonNull(text), CsvConfiguration.SEMICOLON);
     }
 
     /**
@@ -647,10 +669,10 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws NullPointerException if any of the specified arguments is null
      */
     public void export(Path path, Charset charset, OpenOption... openOptions) throws IOException {
-        SkAssertions.requireNonNulls(path, charset, openOptions);
+        Assertions.requireNonNulls(path, charset, openOptions);
         var formatter = new CsvFormatter(config);
         try (var writer = Files.newBufferedWriter(path, charset, openOptions)) {
-            for (var row : internalRows) {
+            for (var row : rows) {
                 writer.write(formatter.toCsvString(row));
                 writer.newLine();
             }
@@ -666,7 +688,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
      * @throws NullPointerException if the specified path is null
      */
     public void export(Path path, OpenOption... openOptions) throws IOException {
-        SkAssertions.requireNonNulls(path, openOptions);
+        Assertions.requireNonNulls(path, openOptions);
         export(path, Charset.defaultCharset(), openOptions);
     }
 
@@ -684,9 +706,9 @@ public class SkCsv implements Iterable<SkCsvRow> {
      */
     @Override
     public boolean equals(Object other) {
-        return other instanceof SkCsv otherCsv
-                && otherCsv.internalRows.size() == internalRows.size()
-                && otherCsv.internalRows.equals(internalRows);
+        return other instanceof Csv otherCsv
+                && otherCsv.rows.size() == rows.size()
+                && otherCsv.rows.equals(rows);
     }
 
     /**
@@ -698,8 +720,8 @@ public class SkCsv implements Iterable<SkCsvRow> {
      */
     @Override
     public int hashCode() {
-        int hash = internalRows.size();
-        for (var row : internalRows) {
+        int hash = rows.size();
+        for (var row : rows) {
             hash ^= row.hashCode();
         }
         return hash;
@@ -717,7 +739,7 @@ public class SkCsv implements Iterable<SkCsvRow> {
     public String toString() {
         var formatter = new CsvFormatter(config);
         var builder = new StringBuilder();
-        for (var row : internalRows) {
+        for (var row : rows) {
             builder.append(formatter.toCsvString(row)).append("\n");
         }
         return builder.toString();

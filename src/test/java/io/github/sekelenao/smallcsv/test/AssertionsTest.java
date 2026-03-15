@@ -1,5 +1,6 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.test;
 
+import io.github.sekelenao.smallcsv.internal.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-final class SkAssertionsTest {
+final class AssertionsTest {
 
     @Nested
     final class Constructor {
@@ -16,7 +17,7 @@ final class SkAssertionsTest {
         @Test
         @DisplayName("Constructor is private and throw")
         void privateConstructor() throws NoSuchMethodException {
-            var constructor = SkAssertions.class.getDeclaredConstructor();
+            var constructor = Assertions.class.getDeclaredConstructor();
             assertThrows(IllegalAccessException.class, constructor::newInstance);
             constructor.setAccessible(true);
             assertThrows(InvocationTargetException.class, constructor::newInstance);

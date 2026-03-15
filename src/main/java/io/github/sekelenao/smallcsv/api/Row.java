@@ -1,4 +1,7 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.api;
+
+import io.github.sekelenao.smallcsv.internal.Assertions;
+import io.github.sekelenao.smallcsv.internal.CsvFormatter;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -19,7 +22,7 @@ import java.util.stream.StreamSupport;
  *
  * <p>Null elements are not permitted in instances of this class, ensuring consistency in data processing.
  */
-public class SkCsvRow implements Iterable<String>, RandomAccess {
+public class Row implements Iterable<String>, RandomAccess {
 
     /**
      * Default capacity for the storage array of CSV row values.
@@ -59,7 +62,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
     /**
      * Constructs an empty SkCsvRow with a default initial capacity.
      */
-    public SkCsvRow() {
+    public Row() {
         this.cells = new String[DEFAULT_CAPACITY];
     }
 
@@ -69,8 +72,8 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * @param amount the initial capacity of the row
      * @throws IllegalArgumentException if the specified amount is not positive
      */
-    public SkCsvRow(int amount) {
-        SkAssertions.positive(amount);
+    public Row(int amount) {
+        Assertions.positive(amount);
         this.cells = new String[amount];
         Arrays.fill(cells, "");
         size = amount;
@@ -83,7 +86,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * @param array the array of strings to initialize the row
      * @throws NullPointerException if the specified array or any of its elements is null
      */
-    public SkCsvRow(String... array) {
+    public Row(String... array) {
         Objects.requireNonNull(array);
         this.cells = new String[array.length];
         for (var value : array) {
@@ -98,7 +101,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * @param collection the collection of strings to initialize the row
      * @throws NullPointerException if the specified collection or any of its elements is null
      */
-    public SkCsvRow(Collection<String> collection) {
+    public Row(Collection<String> collection) {
         Objects.requireNonNull(collection);
         this.cells = new String[collection.size()];
         for(var value : collection){
@@ -133,9 +136,9 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * @throws NullPointerException if the specified iterable or any of its elements is null
      * @throws IllegalArgumentException if the specified estimated size is not positive
      */
-    public SkCsvRow(Iterable<String> iterable, int estimatedSize) {
+    public Row(Iterable<String> iterable, int estimatedSize) {
         Objects.requireNonNull(iterable);
-        SkAssertions.positive(estimatedSize);
+        Assertions.positive(estimatedSize);
         this.cells = new String[estimatedSize];
         for (var value : iterable){
             Objects.requireNonNull(value);
@@ -147,12 +150,12 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
     /**
      * Constructs an SkCsvRow initialized with the specified iterable of strings.
      * The provided iterable is copied, so subsequent changes to the iterable do not affect the SkCsvRow.
-     * If an estimated size is known, use {@link #SkCsvRow(Iterable, int)}, as it may optimize allocations.
+     * If an estimated size is known, use {@link #Row(Iterable, int)}, as it may optimize allocations.
      *
      * @param iterable the iterable of strings to initialize the row
      * @throws NullPointerException if the specified iterable or any of its elements is null
      */
-    public SkCsvRow(Iterable<String> iterable) {
+    public Row(Iterable<String> iterable) {
         this(iterable, 0);
     }
 
@@ -228,7 +231,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      */
     public void addAll(Iterable<String> iterable, int estimatedSize){
         Objects.requireNonNull(iterable);
-        SkAssertions.positive(estimatedSize);
+        Assertions.positive(estimatedSize);
         version++;
         growIfNecessary(estimatedSize);
         for (var value : iterable) {
@@ -271,7 +274,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * @throws IllegalArgumentException if the specified amount is not positive
      */
     public void fill(int amount) {
-        SkAssertions.positive(amount);
+        Assertions.positive(amount);
         version++;
         growIfNecessary(amount);
         Arrays.fill(cells, size, size + amount, "");
@@ -347,7 +350,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
             @Override
             public String next() {
                 if(!hasNext()) throw new NoSuchElementException();
-                SkAssertions.concurrentModification(version, expectedVersion);
+                Assertions.concurrentModification(version, expectedVersion);
                 return cells[index++];
             }
         };
@@ -400,7 +403,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
                 Objects.requireNonNull(consumer);
                 if (index < end) {
                     consumer.accept(array[index++]);
-                    SkAssertions.concurrentModification(version, expectedVersion);
+                    Assertions.concurrentModification(version, expectedVersion);
                     return true;
                 }
                 return false;
@@ -423,7 +426,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
                 while(index < end){
                     consumer.accept(cells[index++]);
                 }
-                SkAssertions.concurrentModification(version, expectedVersion);
+                Assertions.concurrentModification(version, expectedVersion);
             }
         };
     }
@@ -470,9 +473,9 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      *
      * @return a Collector that accumulates elements into a new SkCsvRow
      */
-    public static Collector<String, ?, SkCsvRow> collector(){
+    public static Collector<String, ?, Row> collector(){
         return Collector.of(
-                SkCsvRow::new, SkCsvRow::addAll,
+                Row::new, Row::addAll,
                 (csv1, csv2) -> { csv1.addAll(csv2); return csv1; },
                 Collector.Characteristics.IDENTITY_FINISH
         );
@@ -490,7 +493,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      */
     @Override
     public boolean equals(Object other) {
-        if(other instanceof SkCsvRow otherRow && otherRow.size == size) {
+        if(other instanceof Row otherRow && otherRow.size == size) {
             for (int i = 0; i < size; i++) {
                 if (!otherRow.cells[i].equals(cells[i])) return false;
             }
@@ -518,14 +521,14 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * Returns a CSV string representation of this SkCsvRow using the default configuration.
      * The text is formatted according to the CSV format, where elements are separated by a delimiter and enclosed in
      * quotes if necessary.
-     * This method uses the {@link SkCsvConfig#SEMICOLON SEMICOLON} configuration by default, which uses a semicolon as
+     * This method uses the {@link CsvConfiguration#SEMICOLON SEMICOLON} configuration by default, which uses a semicolon as
      * delimiter and double quotes.
      *
      * @return a CSV string representation of this row
      */
     @Override
     public String toString() {
-        var formatter = new CsvFormatter(SkCsvConfig.SEMICOLON);
+        var formatter = new CsvFormatter(CsvConfiguration.SEMICOLON);
         return formatter.toCsvString(Arrays.asList(cells).subList(0, size));
     }
 
@@ -538,7 +541,7 @@ public class SkCsvRow implements Iterable<String>, RandomAccess {
      * @return a CSV string representation of this row
      * @throws NullPointerException if the specified configuration is null
      */
-    public String toString(SkCsvConfig configuration) {
+    public String toString(CsvConfiguration configuration) {
         Objects.requireNonNull(configuration);
         var formatter = new CsvFormatter(configuration);
         return formatter.toCsvString(Arrays.asList(cells).subList(0, size));

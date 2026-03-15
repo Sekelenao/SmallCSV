@@ -1,5 +1,9 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.test;
 
+import io.github.sekelenao.smallcsv.api.CsvColumn;
+import io.github.sekelenao.smallcsv.api.Csv;
+import io.github.sekelenao.smallcsv.api.CsvConfiguration;
+import io.github.sekelenao.smallcsv.api.SkCsvRecords;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -12,7 +16,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-final class SkCsvRecordTest {
+public final class SkCsvRecordTest {
 
     public record Animal(@CsvColumn String name, float ignored, @CsvColumn int legs) {
 
@@ -58,13 +62,13 @@ final class SkCsvRecordTest {
 
     private static final Path PRODUCED_PATH = Paths.get("src", "test", "resources", "produced.csv");
 
-    private static final List<Animal> ANIMALS = List.of(
+    public static final List<Animal> ANIMALS = List.of(
             new Animal("Dog", 0f, 4),
             new Animal("\"Cat\"\n", 0f, 4),
             new Animal("Spider;", 0f, 8)
     );
 
-    private static final List<Food> FOODS = List.of(
+    public static final List<Food> FOODS = List.of(
             new Food("Soup", "Brown", "Contains Java coffee"),
             new Food("Burger", "Multicolor", "Contains iceberg salad"),
             new Food("Fish", "Blue", "Contains fish...")
@@ -97,7 +101,7 @@ final class SkCsvRecordTest {
         @DisplayName("Export with annotation and default methods")
         void exportWithAnnotation() throws IOException {
             SkCsvRecords.export(PRODUCED_PATH, ANIMALS, StandardOpenOption.CREATE);
-            var csv = SkCsv.from(PRODUCED_PATH);
+            var csv = Csv.from(PRODUCED_PATH);
             assertAll("With annotation",
                     () -> assertEquals(3, csv.size()),
                     () -> assertEquals(2, csv.getFirst().size()),
@@ -107,8 +111,8 @@ final class SkCsvRecordTest {
                     () -> assertEquals(ANIMALS.get(ANIMALS.size() - 1).legs, Integer.parseInt(csv.getLast().getLast()))
             );
             Files.deleteIfExists(PRODUCED_PATH);
-            SkCsvRecords.export(PRODUCED_PATH, ANIMALS, SkCsvConfig.COMMA, StandardOpenOption.CREATE);
-            var csv2 = SkCsv.from(PRODUCED_PATH, SkCsvConfig.COMMA);
+            SkCsvRecords.export(PRODUCED_PATH, ANIMALS, CsvConfiguration.COMMA, StandardOpenOption.CREATE);
+            var csv2 = Csv.from(PRODUCED_PATH, CsvConfiguration.COMMA);
             assertAll("With annotation and config",
                     () -> assertEquals(3, csv2.size()),
                     () -> assertEquals(2, csv2.getFirst().size())
@@ -119,8 +123,8 @@ final class SkCsvRecordTest {
         @Test
         @DisplayName("Export with annotation and override toString")
         void exportWithAnnotationOverride() throws IOException {
-            SkCsvRecords.export(PRODUCED_PATH, FOODS, SkCsvConfig.SEMICOLON, StandardOpenOption.CREATE);
-            var csv = SkCsv.from(PRODUCED_PATH);
+            SkCsvRecords.export(PRODUCED_PATH, FOODS, CsvConfiguration.SEMICOLON, StandardOpenOption.CREATE);
+            var csv = Csv.from(PRODUCED_PATH);
             assertAll("With annotation",
                     () -> assertEquals(3, csv.size()),
                     () -> assertEquals(2, csv.getFirst().size()),
@@ -130,8 +134,8 @@ final class SkCsvRecordTest {
                     () -> assertEquals(FOODS.get(FOODS.size() - 1).color, csv.getLast().getLast())
             );
             Files.deleteIfExists(PRODUCED_PATH);
-            SkCsvRecords.export(PRODUCED_PATH, FOODS, SkCsvConfig.COMMA, StandardOpenOption.CREATE);
-            var csv2 = SkCsv.from(PRODUCED_PATH, SkCsvConfig.COMMA);
+            SkCsvRecords.export(PRODUCED_PATH, FOODS, CsvConfiguration.COMMA, StandardOpenOption.CREATE);
+            var csv2 = Csv.from(PRODUCED_PATH, CsvConfiguration.COMMA);
             assertAll("With annotation and config",
                     () -> assertEquals(3, csv2.size()),
                     () -> assertEquals(2, csv2.getFirst().size())
@@ -144,7 +148,7 @@ final class SkCsvRecordTest {
         @Timeout(3)
         @Order(1)
         void exportALot() {
-            assertDoesNotThrow(() -> SkCsvRecords.export(PRODUCED_PATH, BANK_ACCOUNT_ITERABLE, SkCsvConfig.SEMICOLON, StandardOpenOption.CREATE));
+            assertDoesNotThrow(() -> SkCsvRecords.export(PRODUCED_PATH, BANK_ACCOUNT_ITERABLE, CsvConfiguration.SEMICOLON, StandardOpenOption.CREATE));
         }
 
         @Test
@@ -152,7 +156,7 @@ final class SkCsvRecordTest {
         @Timeout(3)
         @Order(2)
         void importALot() throws IOException {
-            var csv = SkCsv.from(PRODUCED_PATH);
+            var csv = Csv.from(PRODUCED_PATH);
             assertEquals(1_000_000, csv.size());
             Files.deleteIfExists(PRODUCED_PATH);
         }
