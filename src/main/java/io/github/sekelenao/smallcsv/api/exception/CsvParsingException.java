@@ -1,4 +1,4 @@
-package io.github.sekelenao.skcsv.exception;
+package io.github.sekelenao.smallcsv.api.exception;
 
 /**
  * Exception thrown when a CSV parsing error occurs.

@@ -1,4 +1,4 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

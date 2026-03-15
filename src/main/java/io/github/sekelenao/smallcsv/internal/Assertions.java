@@ -1,22 +1,22 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.internal;
 
-import io.github.sekelenao.skcsv.exception.InvalidCsvValueException;
+import io.github.sekelenao.smallcsv.api.exception.InvalidCsvValueException;
 
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Objects;
 
-final class SkAssertions {
+public final class Assertions {
 
-    private SkAssertions() {
-        throw new AssertionError("This class cannot be instantiated.");
+    private Assertions() {
+        throw new AssertionError("You cannot instantiate this class.");
     }
 
-    static void positive(int integer) {
-        if (integer < 0) throw new IllegalArgumentException("Must be positive.");
+    public static void positive(int integer) {
+        if (integer < 0) throw new IllegalArgumentException("Must be positive");
     }
 
-    static void validChar(int character) {
+    public static void isValidChar(int character) {
         switch (character) {
             case '\n' -> throw new InvalidCsvValueException("\\n");
             case '\r' -> throw new InvalidCsvValueException("\\r");
@@ -27,16 +27,16 @@ final class SkAssertions {
         }
     }
 
-    static void validPosition(int position, int size) {
+    public static void validPosition(int position, int size) {
         if (position > size || position < 0)
             throw new IndexOutOfBoundsException("Position " + position + " out of bounds for length " + size);
     }
 
-    static void requireNonNulls(Object... objects) {
+    public static void requireNonNulls(Object... objects) {
         Arrays.stream(objects).forEach(Objects::requireNonNull);
     }
 
-    static void concurrentModification(int version, int expectedVersion){
+    public static void concurrentModification(int version, int expectedVersion){
         if(version != expectedVersion){
             throw new ConcurrentModificationException();
         }

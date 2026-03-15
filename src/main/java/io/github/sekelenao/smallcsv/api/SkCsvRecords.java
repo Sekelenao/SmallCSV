@@ -1,4 +1,7 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.api;
+
+import io.github.sekelenao.smallcsv.internal.Assertions;
+import io.github.sekelenao.smallcsv.internal.CsvFormatter;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -110,8 +113,8 @@ public final class SkCsvRecords {
      * @param options the open options specifying how the file is opened
      * @throws IOException if an I/O error occurs while writing to the file
      */
-    public static void export(Path path, Iterable<? extends Record> records, SkCsvConfig config, OpenOption... options) throws IOException {
-        SkAssertions.requireNonNulls(path, records, config, options);
+    public static void export(Path path, Iterable<? extends Record> records, CsvConfiguration config, OpenOption... options) throws IOException {
+        Assertions.requireNonNulls(path, records, config, options);
         var formatter = new CsvFormatter(config);
         try (var writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, options)) {
             for (var rcd : records) {
@@ -128,7 +131,7 @@ public final class SkCsvRecords {
      * Exports the provided records to a CSV file at the specified path using the default configuration.
      *
      * <p>This method exports the records from the provided iterable to a CSV file located at the specified path.
-     * It uses the default configuration {@link SkCsvConfig#SEMICOLON SEMICOLON} with a semicolon as the delimiter and
+     * It uses the default configuration {@link CsvConfiguration#SEMICOLON SEMICOLON} with a semicolon as the delimiter and
      * double quotes for quoting fields.
      *
      * @param path the path to the CSV file to export the records to
@@ -137,8 +140,8 @@ public final class SkCsvRecords {
      * @throws IOException if an I/O error occurs while writing to the file
      */
     public static void export(Path path, Iterable<? extends Record> records, OpenOption... options) throws IOException {
-        SkAssertions.requireNonNulls(path, records, options);
-        export(path, records, SkCsvConfig.SEMICOLON, options);
+        Assertions.requireNonNulls(path, records, options);
+        export(path, records, CsvConfiguration.SEMICOLON, options);
     }
 
 }

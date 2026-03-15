@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logoSK.svg" width="100" alt="logo">
+  <img src=".idea/icon.svg" width="100" alt="logo">
 </p>
 
 <h1 align="center">

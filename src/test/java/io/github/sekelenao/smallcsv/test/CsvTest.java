@@ -1,7 +1,10 @@
-package io.github.sekelenao.skcsv;
+package io.github.sekelenao.smallcsv.test;
 
-import io.github.sekelenao.skcsv.exception.CsvParsingException;
-import io.github.sekelenao.skcsv.exception.InvalidCsvValueException;
+import io.github.sekelenao.smallcsv.api.Csv;
+import io.github.sekelenao.smallcsv.api.Row;
+import io.github.sekelenao.smallcsv.api.CsvConfiguration;
+import io.github.sekelenao.smallcsv.api.exception.CsvParsingException;
+import io.github.sekelenao.smallcsv.api.exception.InvalidCsvValueException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,19 +24,19 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-final class SkCsvTest {
+final class CsvTest {
 
-    private static SkCsv csvTemplate() {
-        return new SkCsv(
-                new SkCsvRow("\"Hello", "world", "!;"),
-                new SkCsvRow("'Hello,", "\"second,\"", "world", "!'", "")
+    private static Csv csvTemplate() {
+        return new Csv(
+                new Row("\"Hello", "world", "!;"),
+                new Row("'Hello,", "\"second,\"", "world", "!'", "")
         );
     }
 
-    private static SkCsv csvTemplate(int lineNumber) {
-        return new SkCsv(
+    private static Csv csvTemplate(int lineNumber) {
+        return new Csv(
                 IntStream.range(0, lineNumber)
-                        .mapToObj(i -> new SkCsvRow(String.valueOf(i)))
+                        .mapToObj(i -> new Row(String.valueOf(i)))
                         .toList()
         );
     }
@@ -45,20 +48,20 @@ final class SkCsvTest {
         @DisplayName("Empty after default constructor")
         void byEmpty() {
             assertAll("Empty after default constructor",
-                    () -> assertEquals(0, new SkCsv().size()),
-                    () -> assertEquals("", new SkCsv().toString()),
-                    () -> assertTrue(new SkCsv().isEmpty())
+                    () -> assertEquals(0, new Csv().size()),
+                    () -> assertEquals("", new Csv().toString()),
+                    () -> assertTrue(new Csv().isEmpty())
             );
         }
 
         @Test
         @DisplayName("VarArgs constructor")
         void byVarArgs() {
-            var array = new SkCsvRow[]{
-                    new SkCsvRow("\"Hello", "world", "!;"),
-                    new SkCsvRow("'Hello,", "\"second\"", "world", "!'", "")
+            var array = new Row[]{
+                    new Row("\"Hello", "world", "!;"),
+                    new Row("'Hello,", "\"second\"", "world", "!'", "")
             };
-            var csv = new SkCsv(array);
+            var csv = new Csv(array);
             assertAll("Simple operations",
                     () -> assertEquals(2, csv.size()),
                     () -> assertEquals("""
@@ -66,23 +69,23 @@ final class SkCsvTest {
                                     'Hello,;\"""second\""";world;!';
                                     """
                             , csv.toString()),
-                    () -> assertEquals(0, new SkCsv(new SkCsvRow[]{}).size()),
-                    () -> assertEquals("", new SkCsv(new SkCsvRow[]{}).toString()),
-                    () -> assertEquals(1, new SkCsv(new SkCsvRow()).size()),
-                    () -> assertEquals("\n", new SkCsv(new SkCsvRow()).toString())
+                    () -> assertEquals(0, new Csv(new Row[]{}).size()),
+                    () -> assertEquals("", new Csv(new Row[]{}).toString()),
+                    () -> assertEquals(1, new Csv(new Row()).size()),
+                    () -> assertEquals("\n", new Csv(new Row()).toString())
             );
         }
 
         @Test
         @DisplayName("VarArgs constructor null assertions")
         void byVarArgsAssertions() {
-            var emptyRow = new SkCsvRow();
-            var array1 = new SkCsvRow[]{new SkCsvRow(), null};
+            var emptyRow = new Row();
+            var array1 = new Row[]{new Row(), null};
             assertAll("VarArgs constructor null assertions",
-                    () -> assertThrows(NullPointerException.class, () -> new SkCsv((SkCsvRow) null)),
-                    () -> assertThrows(NullPointerException.class, () -> new SkCsv(new SkCsvRow[]{null})),
-                    () -> assertThrows(NullPointerException.class, () -> new SkCsv(array1)),
-                    () -> assertThrows(NullPointerException.class, () -> new SkCsv(emptyRow, null))
+                    () -> assertThrows(NullPointerException.class, () -> new Csv((Row) null)),
+                    () -> assertThrows(NullPointerException.class, () -> new Csv(new Row[]{null})),
+                    () -> assertThrows(NullPointerException.class, () -> new Csv(array1)),
+                    () -> assertThrows(NullPointerException.class, () -> new Csv(emptyRow, null))
             );
         }
 
@@ -91,12 +94,12 @@ final class SkCsvTest {
         void byIterable() {
             var rowList = new ArrayList<>(
                     List.of(
-                            new SkCsvRow("One", "!"),
-                            new SkCsvRow("Two", "!"),
-                            new SkCsvRow("Three", "!")
+                            new Row("One", "!"),
+                            new Row("Two", "!"),
+                            new Row("Three", "!")
                     )
             );
-            var csv = new SkCsv(rowList);
+            var csv = new Csv(rowList);
             assertAll("Simple operations",
                     () -> assertEquals(3, csv.size()),
                     () -> assertEquals("""
@@ -105,23 +108,23 @@ final class SkCsvTest {
                             Three;!
                             """, csv.toString()),
                     () -> assertFalse(csv.isEmpty()),
-                    () -> assertEquals(0, new SkCsv(Collections.emptyList()).size()),
-                    () -> assertEquals(1, new SkCsv(new SkCsvRow()).size()),
-                    () -> assertEquals("", new SkCsv().toString()),
-                    () -> assertEquals("\n", new SkCsv(new SkCsvRow()).toString()),
-                    () -> assertEquals("\n\n", new SkCsv(List.of(new SkCsvRow(), new SkCsvRow())).toString())
+                    () -> assertEquals(0, new Csv(Collections.emptyList()).size()),
+                    () -> assertEquals(1, new Csv(new Row()).size()),
+                    () -> assertEquals("", new Csv().toString()),
+                    () -> assertEquals("\n", new Csv(new Row()).toString()),
+                    () -> assertEquals("\n\n", new Csv(List.of(new Row(), new Row())).toString())
             );
         }
 
         @Test
         @DisplayName("Iterable constructor null assertions")
         void byIterableAssertions() {
-            var wrongList = new ArrayList<SkCsvRow>();
-            wrongList.add(new SkCsvRow());
+            var wrongList = new ArrayList<Row>();
+            wrongList.add(new Row());
             wrongList.add(null);
             assertAll("NullPointer assertions",
-                    () -> assertThrows(NullPointerException.class, () -> new SkCsv((List<SkCsvRow>) null)),
-                    () -> assertThrows(NullPointerException.class, () -> new SkCsv(wrongList))
+                    () -> assertThrows(NullPointerException.class, () -> new Csv((List<Row>) null)),
+                    () -> assertThrows(NullPointerException.class, () -> new Csv(wrongList))
             );
         }
 
@@ -143,15 +146,15 @@ final class SkCsvTest {
                             \"""Hello";world;"!;"
                             'Hello,;\"""second,\""";world;!';
                             """, csv.toString()),
-                    () -> assertEquals(SkCsvConfig.SEMICOLON, csv.configuration()),
+                    () -> assertEquals(CsvConfiguration.SEMICOLON, csv.configuration()),
                     () -> {
-                        csv.configure(new SkCsvConfig(',', '\''));
+                        csv.configure(new CsvConfiguration(',', '\''));
                         assertEquals("""
                                 "Hello,world,!;
                                 '''Hello,','"second,"',world,'!''',
                                 """, csv.toString());
                     },
-                    () -> assertEquals(new SkCsvConfig(',', '\''), csv.configuration())
+                    () -> assertEquals(new CsvConfiguration(',', '\''), csv.configuration())
             );
         }
 
@@ -160,9 +163,9 @@ final class SkCsvTest {
         @DisplayName("Configuration assertions")
         void configAssertions(char wrongChar) {
             assertAll("Configuration assertions",
-                    () -> assertThrows(InvalidCsvValueException.class, () -> new SkCsvConfig(wrongChar, '"')),
-                    () -> assertThrows(InvalidCsvValueException.class, () -> new SkCsvConfig(';', wrongChar)),
-                    () -> assertThrows(IllegalArgumentException.class, () -> new SkCsvConfig(';', ';'))
+                    () -> assertThrows(InvalidCsvValueException.class, () -> new CsvConfiguration(wrongChar, '"')),
+                    () -> assertThrows(InvalidCsvValueException.class, () -> new CsvConfiguration(';', wrongChar)),
+                    () -> assertThrows(IllegalArgumentException.class, () -> new CsvConfiguration(';', ';'))
             );
         }
     }
@@ -174,66 +177,66 @@ final class SkCsvTest {
         @Test
         @DisplayName("add")
         void add() {
-            var csv = new SkCsv();
-            csv.add(new SkCsvRow("Hello", "world", "!"));
+            var csv = new Csv();
+            csv.addLast(new Row("Hello", "world", "!"));
             assertAll("add",
                     () -> assertEquals(1, csv.size()),
                     () -> assertEquals("Hello;world;!\n", csv.toString()),
-                    () -> assertEquals(new SkCsvRow("Hello", "world", "!"), csv.get(0)),
+                    () -> assertEquals(new Row("Hello", "world", "!"), csv.get(0)),
                     () -> {
-                        csv.add(new SkCsvRow("I", "love", "Java", ""));
+                        csv.addLast(new Row("I", "love", "Java", ""));
                         assertEquals("""
                                         Hello;world;!
                                         I;love;Java;
                                         """
                                 , csv.toString());
                     },
-                    () -> assertEquals(new SkCsvRow("I", "love", "Java", ""), csv.get(1))
+                    () -> assertEquals(new Row("I", "love", "Java", ""), csv.get(1))
             );
         }
 
         @Test
         @DisplayName("add null assertions")
         void addNullAssertions() {
-            var emptyCsv = new SkCsv();
-            assertThrows(NullPointerException.class, () -> emptyCsv.add(null));
+            var emptyCsv = new Csv();
+            assertThrows(NullPointerException.class, () -> emptyCsv.addLast(null));
         }
 
         @Test
         @DisplayName("add first")
         void addFirst() {
-            var csv = new SkCsv();
-            csv.addFirst(new SkCsvRow("Hello", "world", "!"));
+            var csv = new Csv();
+            csv.addFirst(new Row("Hello", "world", "!"));
             assertAll("addFirst",
                     () -> assertEquals(1, csv.size()),
                     () -> assertEquals("Hello;world;!\n", csv.toString()),
-                    () -> assertEquals(new SkCsvRow("Hello", "world", "!"), csv.get(0)),
+                    () -> assertEquals(new Row("Hello", "world", "!"), csv.get(0)),
                     () -> {
-                        csv.addFirst(new SkCsvRow("I", "love", "Java", ""));
+                        csv.addFirst(new Row("I", "love", "Java", ""));
                         assertEquals("""
                                         I;love;Java;
                                         Hello;world;!
                                         """
                                 , csv.toString());
                     },
-                    () -> assertEquals(new SkCsvRow("Hello", "world", "!"), csv.get(1))
+                    () -> assertEquals(new Row("Hello", "world", "!"), csv.get(1))
             );
         }
 
         @Test
         @DisplayName("addFirst null assertions")
         void addFirstNullAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             assertThrows(NullPointerException.class, () -> emptyCsv.addFirst(null));
         }
 
         @Test
         @DisplayName("Insert")
         void insert() {
-            var csv = new SkCsv();
-            csv.insert(0, new SkCsvRow("Hello"));
-            csv.insert(0, new SkCsvRow("world"));
-            csv.insert(1, new SkCsvRow("!"));
+            var csv = new Csv();
+            csv.insert(0, new Row("Hello"));
+            csv.insert(0, new Row("world"));
+            csv.insert(1, new Row("!"));
             assertAll("Insert",
                     () -> assertEquals(3, csv.size()),
                     () -> assertEquals("""
@@ -242,29 +245,29 @@ final class SkCsvTest {
                                     Hello
                                     """
                             , csv.toString()),
-                    () -> assertEquals(new SkCsvRow("world"), csv.get(0)),
-                    () -> assertEquals(new SkCsvRow("!"), csv.get(1)),
-                    () -> assertEquals(new SkCsvRow("Hello"), csv.get(2))
+                    () -> assertEquals(new Row("world"), csv.get(0)),
+                    () -> assertEquals(new Row("!"), csv.get(1)),
+                    () -> assertEquals(new Row("Hello"), csv.get(2))
             );
         }
 
         @Test
         @DisplayName("Insert null assertions")
         void insertNullAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             assertThrows(NullPointerException.class, () -> emptyCsv.insert(0, null));
         }
 
         @Test
         @DisplayName("Insert indices assertions")
         void insertIndicesAssertions() {
-            var csv = new SkCsv();
-            var row = new SkCsvRow("out");
+            var csv = new Csv();
+            var row = new Row("out");
             assertAll("Insert indices assertions",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.insert(-1, row)),
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.insert(1, row))
             );
-            csv.insertAll(csv.size(), new SkCsvRow("Hello", "world", "!"));
+            csv.insertAll(csv.size(), new Row("Hello", "world", "!"));
             assertAll("Insert indices assertions 2",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.insert(-1, row)),
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.insert(4, row))
@@ -275,8 +278,8 @@ final class SkCsvTest {
         @DisplayName("Insert all at end")
         void insertAllAtEnd() {
             var csv = csvTemplate();
-            csv.insertAll(csv.size(), new SkCsvRow("(", "and Meta-verse", ")"), new SkCsvRow("Java"));
-            csv.insertAll(csv.size(), List.of(new SkCsvRow("yes"), new SkCsvRow("ok")));
+            csv.insertAll(csv.size(), new Row("(", "and Meta-verse", ")"), new Row("Java"));
+            csv.insertAll(csv.size(), List.of(new Row("yes"), new Row("ok")));
             assertAll("Insert all at end",
                     () -> assertEquals(6, csv.size()),
                     () -> assertEquals("""
@@ -295,8 +298,8 @@ final class SkCsvTest {
         @DisplayName("Insert all at start")
         void insertAllAtStart() {
             var csv = csvTemplate();
-            csv.insertAll(0, new SkCsvRow("(", "and Meta-verse", ")"), new SkCsvRow());
-            csv.insertAll(0, List.of(new SkCsvRow(), new SkCsvRow()));
+            csv.insertAll(0, new Row("(", "and Meta-verse", ")"), new Row());
+            csv.insertAll(0, List.of(new Row(), new Row()));
             assertAll("Insert all at start",
                     () -> assertEquals(6, csv.size()),
                     () -> assertEquals("""
@@ -315,8 +318,8 @@ final class SkCsvTest {
         @DisplayName("Insert all")
         void insertAll() {
             var csv = csvTemplate();
-            csv.insertAll(1, List.of(new SkCsvRow("(", "and Meta-verse", ")"), new SkCsvRow()));
-            csv.insertAll(1, new SkCsvRow("1"), new SkCsvRow("2"));
+            csv.insertAll(1, List.of(new Row("(", "and Meta-verse", ")"), new Row()));
+            csv.insertAll(1, new Row("1"), new Row("2"));
             assertAll("Insert all",
                     () -> assertEquals(6, csv.size()),
                     () -> assertEquals("""
@@ -334,17 +337,17 @@ final class SkCsvTest {
         @Test
         @DisplayName("Insert all null assertions")
         void insertAllNullAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             var helloCsv = csvTemplate();
-            var lst = new ArrayList<SkCsvRow>();
-            lst.add(new SkCsvRow());
+            var lst = new ArrayList<Row>();
+            lst.add(new Row());
             lst.add(null);
             assertAll("Insert all null",
-                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.insertAll(0, (Iterable<SkCsvRow>) null)),
-                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.insertAll(0, (SkCsvRow[]) null)),
+                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.insertAll(0, (Iterable<Row>) null)),
+                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.insertAll(0, (Row[]) null)),
                     () -> assertThrows(NullPointerException.class, () -> emptyCsv.insertAll(0, lst)),
                     () -> assertThrows(NullPointerException.class, () -> helloCsv.insertAll(1, lst)),
-                    () -> assertThrows(NullPointerException.class, () -> helloCsv.insertAll(1, new SkCsvRow[]{null}))
+                    () -> assertThrows(NullPointerException.class, () -> helloCsv.insertAll(1, new Row[]{null}))
             );
         }
 
@@ -353,8 +356,8 @@ final class SkCsvTest {
         @DisplayName("Insert all position assertions")
         void insertAllPositionAssertions(int index) {
             var csv = csvTemplate();
-            var lst = new ArrayList<SkCsvRow>();
-            var row = new SkCsvRow();
+            var lst = new ArrayList<Row>();
+            var row = new Row();
             assertAll("Insert all position assertions",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.insertAll(index, lst)),
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.insertAll(index, row))
@@ -365,8 +368,8 @@ final class SkCsvTest {
         @DisplayName("Add all at end")
         void addAll() {
             var csv = csvTemplate();
-            csv.addAll(new SkCsvRow("(", "and Meta-verse", ")"), new SkCsvRow("Java"));
-            csv.addAll(List.of(new SkCsvRow("yes"), new SkCsvRow("ok")));
+            csv.addAll(new Row("(", "and Meta-verse", ")"), new Row("Java"));
+            csv.addAll(List.of(new Row("yes"), new Row("ok")));
             assertAll("Add all",
                     () -> assertEquals(6, csv.size()),
                     () -> assertEquals("""
@@ -384,11 +387,11 @@ final class SkCsvTest {
         @Test
         @DisplayName("Insert all null assertions")
         void addAllNullAssertions() {
-            var emptyCsv = new SkCsv();
-            var lst = Collections.singleton((SkCsvRow) null);
+            var emptyCsv = new Csv();
+            var lst = Collections.singleton((Row) null);
             assertAll("Add all null",
-                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll((Iterable<SkCsvRow>) null)),
-                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll((SkCsvRow[]) null)),
+                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll((Iterable<Row>) null)),
+                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll((Row[]) null)),
                     () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll(lst))
             );
         }
@@ -406,7 +409,7 @@ final class SkCsvTest {
             var csv = csvTemplate(8);
             assertAll("Set all indices",
                     () -> {
-                        csv.set(index, new SkCsvRow("replaced"));
+                        csv.set(index, new Row("replaced"));
                         assertEquals("replaced", csv.get(index).getFirst());
                     }
             );
@@ -416,8 +419,8 @@ final class SkCsvTest {
         @DisplayName("Set indices assertions")
         void setAllIndicesAssertions() {
             var csv = csvTemplate(8);
-            var emptyCsv = new SkCsv();
-            var emptyRow = new SkCsvRow();
+            var emptyCsv = new Csv();
+            var emptyRow = new Row();
             assertAll("Set indices assertions",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.set(-1, emptyRow)),
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.set(8, emptyRow)),
@@ -428,7 +431,7 @@ final class SkCsvTest {
         @Test
         @DisplayName("Set null assertions")
         void setNullAssertions() {
-            var csv = new SkCsv(new SkCsvRow("Alone"));
+            var csv = new Csv(new Row("Alone"));
             assertThrows(NullPointerException.class, () -> csv.set(0, null));
         }
 
@@ -448,7 +451,7 @@ final class SkCsvTest {
         @Test
         @DisplayName("Get indices assertions")
         void getAllIndicesAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             var csv = csvTemplate(8);
             assertAll("Set indices assertions",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> csv.get(-1)),
@@ -470,7 +473,7 @@ final class SkCsvTest {
         @Test
         @DisplayName("Get indices assertions")
         void getFirstAndLastAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             assertAll("Get first and last assertions",
                     () -> assertThrows(NoSuchElementException.class, emptyCsv::getFirst),
                     () -> assertThrows(NoSuchElementException.class, emptyCsv::getLast)
@@ -545,7 +548,7 @@ final class SkCsvTest {
         @DisplayName("Remove first and last assertions")
         void removeFirstAndLastAssertions() {
             var csv = csvTemplate(3);
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             csv.removeFirst();
             csv.removeLast();
             csv.removeFirst();
@@ -578,7 +581,7 @@ final class SkCsvTest {
         @Test
         @DisplayName("RemoveIf null assertions")
         void removeIfNullAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             assertThrows(NullPointerException.class, () -> emptyCsv.removeIf(null));
         }
 
@@ -592,10 +595,10 @@ final class SkCsvTest {
         void contains() {
             var csv = csvTemplate(8);
             assertAll("Contains basic tests",
-                    () -> assertTrue(csv.contains(new SkCsvRow("5"))),
-                    () -> assertTrue(csv.contains(new SkCsvRow("0"))),
-                    () -> assertFalse(csv.contains(new SkCsvRow("8"))),
-                    () -> assertFalse(csv.contains(new SkCsvRow("-1"))),
+                    () -> assertTrue(csv.contains(new Row("5"))),
+                    () -> assertTrue(csv.contains(new Row("0"))),
+                    () -> assertFalse(csv.contains(new Row("8"))),
+                    () -> assertFalse(csv.contains(new Row("-1"))),
                     () -> assertFalse(csv.contains(new Object())),
                     () -> assertFalse(csv.contains(null))
             );
@@ -610,15 +613,15 @@ final class SkCsvTest {
         @DisplayName("ForEach basic test")
         void forEach() {
             var csv = csvTemplate();
-            var lst = new ArrayList<SkCsvRow>();
-            csv.forEach((Object value) -> lst.add((SkCsvRow) value));
+            var lst = new ArrayList<Row>();
+            csv.forEach((Object value) -> lst.add((Row) value));
             assertTrue(IntStream.range(0, csv.size()).allMatch(i -> csv.get(i).equals(lst.get(i))));
         }
 
         @Test
         @DisplayName("ForEach null assertions")
         void forEachNullAssertions() {
-            var emptyCsv = new SkCsv();
+            var emptyCsv = new Csv();
             assertThrows(NullPointerException.class, () -> emptyCsv.forEach(null));
         }
 
@@ -631,7 +634,7 @@ final class SkCsvTest {
         @Test
         @DisplayName("Empty iterator")
         void emptyIterator() {
-            var csv = new SkCsv();
+            var csv = new Csv();
             assertAll("Empty iterator",
                     () -> assertFalse(csv.iterator().hasNext()),
                     () -> assertThrows(NoSuchElementException.class, csv.iterator()::next)
@@ -641,7 +644,7 @@ final class SkCsvTest {
         @Test
         @DisplayName("For each loop is working")
         void iterableFor() {
-            var lst = new ArrayList<SkCsvRow>();
+            var lst = new ArrayList<Row>();
             var csv = csvTemplate();
             for (var row : csv) lst.add(row);
             assertAll("For each working",
@@ -655,7 +658,7 @@ final class SkCsvTest {
         void iterator() {
             var csv = csvTemplate();
             var it = csv.iterator();
-            var emptyIt = new SkCsvRow().iterator();
+            var emptyIt = new Row().iterator();
             assertAll("Iterator is working",
                     () -> assertTrue(it.hasNext()),
                     () -> assertTrue(it.hasNext()),
@@ -694,14 +697,14 @@ final class SkCsvTest {
         @Test
         @DisplayName("Iterator for each remaining is working")
         void iterableForEachRemaining() {
-            var lst = new ArrayList<SkCsvRow>();
+            var lst = new ArrayList<Row>();
             var csv = csvTemplate();
             var it = csv.iterator();
             it.next();
             it.forEachRemaining(lst::add);
             assertAll("For each remaining working",
                     () -> assertEquals(1, lst.size()),
-                    () -> assertEquals(new SkCsvRow("'Hello,", "\"second,\"", "world", "!'", ""), lst.get(0))
+                    () -> assertEquals(new Row("'Hello,", "\"second,\"", "world", "!'", ""), lst.get(0))
             );
         }
 
@@ -729,7 +732,7 @@ final class SkCsvTest {
                 assertEquals(expected--, lstItr.previousIndex());
                 lstItr.previous();
             }
-            lstItr.add(new SkCsvRow("add"));
+            lstItr.add(new Row("add"));
             assertEquals(3, csv.size());
         }
 
@@ -738,7 +741,7 @@ final class SkCsvTest {
         void listIteratorAssertions(){
             var csv = csvTemplate();
             var lstItr = csv.listIterator();
-            var emptyRow = new SkCsvRow();
+            var emptyRow = new Row();
             assertAll(
                     () -> assertThrows(IllegalStateException.class, lstItr::remove),
                     () -> assertThrows(IllegalStateException.class, () -> lstItr.set(emptyRow)),
@@ -757,11 +760,11 @@ final class SkCsvTest {
         @Test
         @DisplayName("Stream basic tests")
         void stream() {
-            var lst = new ArrayList<SkCsvRow>();
-            var emptyCsv = new SkCsv();
+            var lst = new ArrayList<Row>();
+            var emptyCsv = new Csv();
             var csv = csvTemplate();
-            csv.add(new SkCsvRow());
-            csv.stream().filter(SkCsvRow::isEmpty).forEach(lst::add);
+            csv.addLast(new Row());
+            csv.stream().filter(Row::isEmpty).forEach(lst::add);
             csv.remove(csv.size() - 1);
             assertAll("Stream basics",
                     () -> assertEquals(2, csv.size()),
@@ -791,8 +794,8 @@ final class SkCsvTest {
                                     """
                             , csv.toString()),
                     () -> assertEquals(2, csv.size()),
-                    () -> assertDoesNotThrow(() -> csv.map((Object s) -> new SkCsvRow())),
-                    () -> assertEquals(0, csv.stream().mapToInt(SkCsvRow::size).sum())
+                    () -> assertDoesNotThrow(() -> csv.map((Object s) -> new Row())),
+                    () -> assertEquals(0, csv.stream().mapToInt(Row::size).sum())
             );
         }
 
@@ -815,24 +818,24 @@ final class SkCsvTest {
         @Test
         @DisplayName("Collector is working")
         void collector() {
-            var csv = new SkCsv(
-                    new SkCsvRow("x"),
-                    new SkCsvRow("y"),
-                    new SkCsvRow("z"),
-                    new SkCsvRow("x"),
-                    new SkCsvRow("z"),
-                    new SkCsvRow("y")
+            var csv = new Csv(
+                    new Row("x"),
+                    new Row("y"),
+                    new Row("z"),
+                    new Row("x"),
+                    new Row("z"),
+                    new Row("y")
             );
             var csv2 = csv.stream()
                     .filter(s -> !s.contains("z"))
-                    .collect(SkCsv.collector());
-            var csv3 = csv.stream().collect(SkCsv.collector());
+                    .collect(Csv.collector());
+            var csv3 = csv.stream().collect(Csv.collector());
             assertAll("Collector",
-                    () -> assertEquals(new SkCsv(
-                            new SkCsvRow("x"),
-                            new SkCsvRow("y"),
-                            new SkCsvRow("x"),
-                            new SkCsvRow("y")
+                    () -> assertEquals(new Csv(
+                            new Row("x"),
+                            new Row("y"),
+                            new Row("x"),
+                            new Row("y")
                     ), csv2),
                     () -> assertEquals(csv, csv3)
             );
@@ -842,9 +845,9 @@ final class SkCsvTest {
         @DisplayName("Parallel collector")
         void ParallelCollector() {
             var result = IntStream.range(0, 1000).parallel()
-                    .mapToObj(i -> new SkCsvRow(String.valueOf(i)))
-                    .collect(SkCsv.collector());
-            assertTrue(IntStream.range(0, 1000).allMatch(i -> result.get(i).equals(new SkCsvRow(String.valueOf(i)))));
+                    .mapToObj(i -> new Row(String.valueOf(i)))
+                    .collect(Csv.collector());
+            assertTrue(IntStream.range(0, 1000).allMatch(i -> result.get(i).equals(new Row(String.valueOf(i)))));
         }
 
     }
@@ -861,7 +864,7 @@ final class SkCsvTest {
                     () -> assertNotSame(csv1, csv2),
                     () -> assertEquals(csv1, csv2),
                     () -> {
-                        csv1.set(0, new SkCsvRow());
+                        csv1.set(0, new Row());
                         assertNotEquals(csv1, csv2);
                     },
                     () -> assertNotEquals(null, csv1)
@@ -878,11 +881,11 @@ final class SkCsvTest {
         void hashcode() {
             var csv1 = csvTemplate();
             var csv2 = csvTemplate();
-            var csv3 = new SkCsv();
+            var csv3 = new Csv();
             assertAll("Equals basic tests",
                     () -> assertEquals(csv1.hashCode(), csv2.hashCode()),
                     () -> {
-                        csv1.set(0, new SkCsvRow());
+                        csv1.set(0, new Row());
                         assertNotEquals(csv1.hashCode(), csv2.hashCode());
                     },
                     () -> assertNotEquals(csv1.hashCode(), csv3.hashCode()),
@@ -899,8 +902,8 @@ final class SkCsvTest {
         @DisplayName("From text with default config")
         void fromText() {
             var text = "\"Hello\"\"\";world;!;\";\";";
-            var csv1 = SkCsv.from(Collections.singleton(text));
-            var csv2 = SkCsv.from(Collections.singleton(";\"Hello\";world"));
+            var csv1 = Csv.from(Collections.singleton(text));
+            var csv2 = Csv.from(Collections.singleton(";\"Hello\";world"));
             assertAll("from text default",
                     () -> assertEquals(1, csv1.size()),
                     () -> assertEquals(1, csv2.size()),
@@ -921,11 +924,11 @@ final class SkCsvTest {
         @DisplayName("From text complex tests")
         void fromTextComplex() {
             assertAll("From text complex",
-                    () -> assertEquals("\n", SkCsv.from(Collections.singleton("\"\"")).toString()),
-                    () -> assertEquals("\"", SkCsv.from(Collections.singleton("\"\"\"\"")).getFirst().getFirst()),
-                    () -> assertEquals("\"\"\"\"", SkCsv.from(Collections.singleton("\"\"\"\"")).getFirst().toString()),
-                    () -> assertEquals("\"\"\"\"\n", SkCsv.from(Collections.singleton("\"\"\"\"")).toString()),
-                    () -> assertEquals(" ; ; ;\n", SkCsv.from(Collections.singleton(" ; ; ;")).toString())
+                    () -> assertEquals("\n", Csv.from(Collections.singleton("\"\"")).toString()),
+                    () -> assertEquals("\"", Csv.from(Collections.singleton("\"\"\"\"")).getFirst().getFirst()),
+                    () -> assertEquals("\"\"\"\"", Csv.from(Collections.singleton("\"\"\"\"")).getFirst().toString()),
+                    () -> assertEquals("\"\"\"\"\n", Csv.from(Collections.singleton("\"\"\"\"")).toString()),
+                    () -> assertEquals(" ; ; ;\n", Csv.from(Collections.singleton(" ; ; ;")).toString())
             );
         }
 
@@ -934,9 +937,9 @@ final class SkCsvTest {
         void fromTextWithConfig() {
             var defaultText = Collections.singleton("Hello;world;!");
             var customText = Collections.singleton("'Hello,',world,'!'''");
-            var config = new SkCsvConfig(',', '\'');
-            var defaultRow = SkCsv.from(defaultText, config).getFirst();
-            var customRow = SkCsv.from(customText, config).getFirst();
+            var config = new CsvConfiguration(',', '\'');
+            var defaultRow = Csv.from(defaultText, config).getFirst();
+            var customRow = Csv.from(customText, config).getFirst();
             assertAll("from text custom config",
                     () -> assertEquals(1, defaultRow.size()),
                     () -> assertEquals(3, customRow.size()),
@@ -952,98 +955,98 @@ final class SkCsvTest {
         @Test
         @DisplayName("Null assertions")
         void fromTextNull() {
-            var config = new SkCsvConfig(' ', '@');
+            var config = new CsvConfiguration(' ', '@');
             var singleton = Collections.singleton("null");
             var path = Paths.get("src", "test", "resources", "temp.csv");
             assertAll("Null assertions",
-                    () -> assertThrows(NullPointerException.class, () -> SkCsv.from((Iterable<String>) null)),
-                    () -> assertThrows(NullPointerException.class, () -> SkCsv.from((List<String>) null, config)),
-                    () -> assertThrows(NullPointerException.class, () -> SkCsv.from(singleton, null)),
-                    () -> assertThrows(NullPointerException.class, () -> SkCsv.from(path, config, null))
+                    () -> assertThrows(NullPointerException.class, () -> Csv.from((Iterable<String>) null)),
+                    () -> assertThrows(NullPointerException.class, () -> Csv.from((List<String>) null, config)),
+                    () -> assertThrows(NullPointerException.class, () -> Csv.from(singleton, null)),
+                    () -> assertThrows(NullPointerException.class, () -> Csv.from(path, config, null))
             );
         }
 
         @Test
         @DisplayName("From text parsing exceptions")
         void fromTextParsingAssertions() {
-            var config = new SkCsvConfig(',', '\'');
+            var config = new CsvConfiguration(',', '\'');
             assertAll("From text default",
                     () -> {
                         var singleton = Collections.singleton("Hello;\"world\"\";!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton)
+                                Csv.from(singleton)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("Hello;\"world\"!\";!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton)
+                                Csv.from(singleton)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("\"Hello;world!;!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton)
+                                Csv.from(singleton)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("'Hello;world!;!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("'Hello'';world!;!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("Hello';'world!;!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("Hello'';world!;!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("''';world!;!");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("Hello;world!;!;'");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("'Hello,',world,'!''");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("Hello,world,!''");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton, config)
+                                Csv.from(singleton, config)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("\"");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton)
+                                Csv.from(singleton)
                         );
                     },
                     () -> {
                         var singleton = Collections.singleton("\"\"\"");
                         assertThrows(CsvParsingException.class, () ->
-                                SkCsv.from(singleton)
+                                Csv.from(singleton)
                         );
                     }
             );
@@ -1055,16 +1058,16 @@ final class SkCsvTest {
             var pathSemicolon = Paths.get("src", "test", "resources", "template.csv");
             var pathComma = Paths.get("src", "test", "resources", "template_comma.csv");
             var pathUselessQuotes = Paths.get("src", "test", "resources", "template_useless_quotes.csv");
-            var csvSemicolon = SkCsv.from(pathSemicolon, SkCsvConfig.SEMICOLON);
-            var csvComma = SkCsv.from(pathComma, SkCsvConfig.COMMA);
-            var csvUselessQuotes = SkCsv.from(pathUselessQuotes, StandardCharsets.UTF_8);
+            var csvSemicolon = Csv.from(pathSemicolon, CsvConfiguration.SEMICOLON);
+            var csvComma = Csv.from(pathComma, CsvConfiguration.COMMA);
+            var csvUselessQuotes = Csv.from(pathUselessQuotes, StandardCharsets.UTF_8);
             assertAll("From a file",
                     () -> assertEquals(6, csvSemicolon.size()),
                     () -> assertEquals(6, csvComma.size()),
                     () -> assertEquals(Files.readString(pathSemicolon).replace("\r", ""), csvSemicolon.toString()),
-                    () -> assertEquals(Files.readString(pathComma).replace("\r", ""), csvComma.configure(SkCsvConfig.COMMA).toString()),
+                    () -> assertEquals(Files.readString(pathComma).replace("\r", ""), csvComma.configure(CsvConfiguration.COMMA).toString()),
                     () -> assertEquals(csvSemicolon, csvComma),
-                    () -> assertEquals(csvSemicolon.configure(new SkCsvConfig('@', '/')), csvComma),
+                    () -> assertEquals(csvSemicolon.configure(new CsvConfiguration('@', '/')), csvComma),
                     () -> assertEquals(csvSemicolon, csvUselessQuotes)
             );
         }
@@ -1078,9 +1081,9 @@ final class SkCsvTest {
         @DisplayName("Export to a file")
         void export() throws IOException {
             var path = Paths.get("src", "test", "resources", "temp.csv");
-            var csv = new SkCsv(
-                    new SkCsvRow("", "world", "\njump\n", "cool"),
-                    new SkCsvRow("yeah", " ok", "")
+            var csv = new Csv(
+                    new Row("", "world", "\njump\n", "cool"),
+                    new Row("yeah", " ok", "")
             );
             csv.export(path);
             assertEquals(Files.readString(path).replace("\r", ""), csv.toString());
@@ -1091,9 +1094,9 @@ final class SkCsvTest {
         @DisplayName("Export assertions")
         void exportAssertions() {
             var path = Paths.get("src", "test", "resources", "temp.csv");
-            var csv = new SkCsv(
-                    new SkCsvRow("", "world", "\njump\n", "cool"),
-                    new SkCsvRow("yeah", " ok", "")
+            var csv = new Csv(
+                    new Row("", "world", "\njump\n", "cool"),
+                    new Row("yeah", " ok", "")
             );
             assertAll("Export assertions",
                     () -> assertThrows(NullPointerException.class, () -> csv.export(null, StandardCharsets.UTF_8)),
