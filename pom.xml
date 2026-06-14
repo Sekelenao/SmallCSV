@@ -46,7 +46,7 @@
     <properties>
 
         <!-- Dependencies -->
-        <dependency.junit.version>6.1.0-M1</dependency.junit.version>
+        <dependency.junit.version>6.1.0</dependency.junit.version>
 
         <!-- Java version -->
         <java.version>21</java.version>
@@ -56,10 +56,10 @@
 
         <!-- Plugins versions -->
         <plugin.maven.compiler.version>3.15.0</plugin.maven.compiler.version>
-        <plugin.maven.enforcer.version>3.6.2</plugin.maven.enforcer.version>
-        <plugin.maven.surefire.version>3.5.5</plugin.maven.surefire.version>
+        <plugin.maven.enforcer.version>3.6.3</plugin.maven.enforcer.version>
+        <plugin.maven.surefire.version>3.6.0-M1</plugin.maven.surefire.version>
         <plugin.maven.surefire.report.version>3.5.4</plugin.maven.surefire.report.version>
-        <plugin.jacoco.version>0.8.14</plugin.jacoco.version>
+        <plugin.jacoco.version>0.8.15</plugin.jacoco.version>
         <plugin.maven.site.version>4.0.0-M16</plugin.maven.site.version>
         <plugin.maven.project.info.reports.version>3.9.0</plugin.maven.project.info.reports.version>
         <plugin.maven.javadoc.version>3.12.0</plugin.maven.javadoc.version>
