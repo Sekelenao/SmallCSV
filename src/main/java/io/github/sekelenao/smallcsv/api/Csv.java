@@ -119,9 +119,6 @@ public class Csv implements Iterable<Row>, RandomAccess {
      */
     public static Csv of(Iterable<Row> rows) {
         Objects.requireNonNull(rows);
-        if (rows instanceof Collection<Row> col) {
-            return new Csv(col);
-        }
         var list = new ArrayList<Row>();
         for (var row : rows) {
             Objects.requireNonNull(row);
