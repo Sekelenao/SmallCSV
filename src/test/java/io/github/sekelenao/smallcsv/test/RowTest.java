@@ -627,6 +627,75 @@ final class RowTest {
                     hey;"cool
                     cool\"""", row.toString());
         }
-
     }
+
+    @Nested
+    @DisplayName("Spliterator")
+    final class SpliteratorTests {
+
+        @Test
+        @DisplayName("tryAdvance is working")
+        void tryAdvance() {
+            var row = Row.of("a", "b", "c");
+            var spliterator = row.spliterator();
+            var result = new ArrayList<String>();
+            assertTrue(spliterator.tryAdvance(result::add));
+            assertTrue(spliterator.tryAdvance(result::add));
+            assertTrue(spliterator.tryAdvance(result::add));
+            assertFalse(spliterator.tryAdvance(result::add));
+            assertEquals(List.of("a", "b", "c"), result);
+        }
+
+        @Test
+        @DisplayName("trySplit is working")
+        void trySplit() {
+            var row = Row.of("a", "b", "c", "d");
+            var spliterator1 = row.spliterator();
+            var spliterator2 = spliterator1.trySplit();
+
+            assertNotNull(spliterator2);
+            var result1 = new ArrayList<String>();
+            var result2 = new ArrayList<String>();
+
+            spliterator1.forEachRemaining(result1::add);
+            spliterator2.forEachRemaining(result2::add);
+
+            // spliterator2 handles the first half, spliterator1 handles the second half
+            assertEquals(List.of("c", "d"), result1);
+            assertEquals(List.of("a", "b"), result2);
+        }
+
+        @Test
+        @DisplayName("trySplit on empty or single element returns null")
+        void trySplitEmpty() {
+            var rowEmpty = Row.empty();
+            var rowSingle = Row.of("a");
+            assertNull(rowEmpty.spliterator().trySplit());
+            assertNull(rowSingle.spliterator().trySplit());
+        }
+
+        @Test
+        @DisplayName("forEachRemaining is working")
+        void forEachRemaining() {
+            var row = Row.of("a", "b", "c");
+            var spliterator = row.spliterator();
+            var result = new ArrayList<String>();
+            spliterator.forEachRemaining(result::add);
+            assertEquals(List.of("a", "b", "c"), result);
+        }
+
+        @Test
+        @DisplayName("spliterator properties")
+        void spliteratorProperties() {
+            var row = Row.of("a", "b", "c");
+            var spliterator = row.spliterator();
+            assertEquals(3, spliterator.estimateSize());
+            var characteristics = spliterator.characteristics();
+            assertTrue((characteristics & Spliterator.SIZED) != 0);
+            assertTrue((characteristics & Spliterator.ORDERED) != 0);
+            assertTrue((characteristics & Spliterator.NONNULL) != 0);
+            assertTrue((characteristics & Spliterator.SUBSIZED) != 0);
+        }
+    }
+
 }

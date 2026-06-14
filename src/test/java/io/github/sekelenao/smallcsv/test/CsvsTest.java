@@ -300,6 +300,34 @@ class CsvsTest {
             }
         }
 
+        @Test
+        @DisplayName("Read overloads coverage")
+        void fromOverloads() throws IOException {
+            var path = copyResourceToTemp("template.csv");
+
+            // test from(Path)
+            var csv1 = Csvs.from(path);
+            assertEquals(6, csv1.size());
+
+            // test from(InputStream)
+            try (var in = Files.newInputStream(path)) {
+                var csv2 = Csvs.from(in);
+                assertEquals(6, csv2.size());
+            }
+
+            // test from(InputStream, Charset)
+            try (var in = Files.newInputStream(path)) {
+                var csv3 = Csvs.from(in, StandardCharsets.UTF_8);
+                assertEquals(6, csv3.size());
+            }
+
+            // test from(BufferedReader)
+            try (var reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+                var csv4 = Csvs.from(reader);
+                assertEquals(6, csv4.size());
+            }
+        }
+
     }
 
     @Nested
@@ -480,6 +508,53 @@ class CsvsTest {
                     () -> assertThrows(NullPointerException.class, () -> Csvs.export(new ByteArrayOutputStream(), (Iterable<? extends Record>) null)),
                     () -> assertThrows(NullPointerException.class, () -> Csvs.export(new ByteArrayOutputStream(), ANIMALS, null, java.nio.charset.StandardCharsets.UTF_8)),
                     () -> assertThrows(NullPointerException.class, () -> Csvs.export(new ByteArrayOutputStream(), ANIMALS, CsvConfiguration.SEMICOLON, null))
+            );
+        }
+
+        public record FaultyRecord(@CsvColumn String value) {
+            @Override
+            public String value() {
+                throw new RuntimeException("faulty");
+            }
+        }
+
+        public record ErrorRecord(@CsvColumn String value) {
+            @Override
+            public String value() {
+                throw new OutOfMemoryError("error");
+            }
+        }
+
+        public record SneakyRecord(@CsvColumn String value) {
+            @Override
+            public String value() {
+                sneakyThrow(new IOException("checked"));
+                return null;
+            }
+
+            @SuppressWarnings("unchecked")
+            private static <T extends Throwable> void sneakyThrow(Throwable t) throws T {
+                throw (T) t;
+            }
+        }
+
+        private static class PrivateContainer {
+            private record HiddenRecord(@CsvColumn String value) {}
+        }
+
+        @Test
+        @DisplayName("Reflection exception coverage")
+        void testReflectionExceptions() {
+            var faulty = new FaultyRecord("a");
+            var error = new ErrorRecord("b");
+            var sneaky = new SneakyRecord("c");
+            var hidden = new PrivateContainer.HiddenRecord("d");
+
+            assertAll("Reflection exceptions",
+                    () -> assertThrows(RuntimeException.class, () -> Csvs.export(new ByteArrayOutputStream(), List.of(faulty))),
+                    () -> assertThrows(OutOfMemoryError.class, () -> Csvs.export(new ByteArrayOutputStream(), List.of(error))),
+                    () -> assertThrows(java.lang.reflect.UndeclaredThrowableException.class, () -> Csvs.export(new ByteArrayOutputStream(), List.of(sneaky))),
+                    () -> assertThrows(IllegalAccessError.class, () -> Csvs.export(new ByteArrayOutputStream(), List.of(hidden)))
             );
         }
 

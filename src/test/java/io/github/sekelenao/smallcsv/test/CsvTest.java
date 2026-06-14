@@ -121,6 +121,17 @@ final class CsvTest {
             );
         }
 
+        @Test
+        @DisplayName("Iterable (non-collection) constructor")
+        void byNonCollectionIterable() {
+            Iterable<Row> iterable = () -> List.of(Row.of("One", "!"), Row.of("Two", "!")).iterator();
+            var csv = Csv.of(iterable);
+            assertAll("Iterable (non-collection)",
+                    () -> assertEquals(2, csv.size()),
+                    () -> assertEquals("One;!\nTwo;!\n", csv.toString())
+            );
+        }
+
     }
 
     @Nested
@@ -385,7 +396,8 @@ final class CsvTest {
             assertAll("Add all null",
                     () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll((Iterable<Row>) null)),
                     () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll((Row[]) null)),
-                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll(lst))
+                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll(lst)),
+                    () -> assertThrows(NullPointerException.class, () -> emptyCsv.addAll(Row.empty(), null))
             );
         }
 
@@ -888,6 +900,112 @@ final class CsvTest {
 
     }
 
+    @Nested
+    @DisplayName("ListIterator")
+    final class ListIteratorTests {
 
+        @Test
+        @DisplayName("ListIterator with index")
+        void testListIteratorWithIndex() {
+            var csv = csvTemplate(); // has 2 rows
+            var iterator = csv.listIterator(1);
+
+            // test basic navigation
+            assertTrue(iterator.hasNext());
+            assertTrue(iterator.hasPrevious());
+            assertEquals(1, iterator.nextIndex());
+            assertEquals(0, iterator.previousIndex());
+
+            var nextRow = iterator.next();
+            assertEquals(csvTemplate().get(1), nextRow);
+
+            var previousRow = iterator.previous();
+            assertEquals(csvTemplate().get(1), previousRow);
+
+            var prevRow2 = iterator.previous();
+            assertEquals(csvTemplate().get(0), prevRow2);
+
+            // test set
+            var newRow = Row.of("new");
+            iterator.set(newRow);
+            assertEquals(newRow, csv.get(0));
+
+            // test remove
+            iterator.next(); // now at index 1
+            iterator.remove();
+            assertEquals(1, csv.size());
+            assertEquals(csvTemplate().get(1), csv.get(0));
+
+            // test add
+            var addedRow = Row.of("added");
+            iterator.add(addedRow);
+            assertEquals(2, csv.size());
+            assertEquals(addedRow, csv.get(0));
+            assertEquals(csvTemplate().get(1), csv.get(1));
+
+            // test forEachRemaining
+            iterator = csv.listIterator(0);
+            var collected = new ArrayList<Row>();
+            iterator.forEachRemaining(collected::add);
+            assertEquals(2, collected.size());
+            assertEquals(addedRow, collected.get(0));
+            assertEquals(csvTemplate().get(1), collected.get(1));
+
+            // test assertions
+            assertThrows(NullPointerException.class, () -> csv.listIterator(0).set(null));
+            assertThrows(NullPointerException.class, () -> csv.listIterator(0).add(null));
+            assertThrows(NullPointerException.class, () -> csv.listIterator(0).forEachRemaining(null));
+        }
+
+        @Test
+        @DisplayName("ListIterator default")
+        void testListIteratorDefault() {
+            var csv = csvTemplate(); // has 2 rows
+            var iterator = csv.listIterator();
+
+            // test basic navigation
+            assertTrue(iterator.hasNext());
+            assertFalse(iterator.hasPrevious());
+            assertEquals(0, iterator.nextIndex());
+            assertEquals(-1, iterator.previousIndex());
+
+            var nextRow = iterator.next();
+            assertEquals(csvTemplate().get(0), nextRow);
+
+            assertTrue(iterator.hasPrevious());
+            assertEquals(nextRow, iterator.previous());
+            iterator.next();
+
+            // test set
+            var newRow = Row.of("new");
+            iterator.set(newRow);
+            assertEquals(newRow, csv.get(0));
+
+            // test remove
+            iterator.remove();
+            assertEquals(1, csv.size());
+            assertEquals(csvTemplate().get(1), csv.get(0));
+
+            // test add
+            var addedRow = Row.of("added");
+            iterator.add(addedRow);
+            assertEquals(2, csv.size());
+            assertEquals(addedRow, csv.get(0));
+            assertEquals(csvTemplate().get(1), csv.get(1));
+
+            // test forEachRemaining
+            iterator = csv.listIterator();
+            var collected = new ArrayList<Row>();
+            iterator.forEachRemaining(collected::add);
+            assertEquals(2, collected.size());
+            assertEquals(addedRow, collected.get(0));
+            assertEquals(csvTemplate().get(1), collected.get(1));
+
+            // test assertions
+            assertThrows(NullPointerException.class, () -> csv.listIterator().set(null));
+            assertThrows(NullPointerException.class, () -> csv.listIterator().add(null));
+            assertThrows(NullPointerException.class, () -> csv.listIterator().forEachRemaining(null));
+        }
+    }
 
 }
