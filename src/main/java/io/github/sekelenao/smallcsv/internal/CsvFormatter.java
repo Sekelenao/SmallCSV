@@ -1,11 +1,13 @@
 package io.github.sekelenao.smallcsv.internal;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Objects;
+
 import io.github.sekelenao.smallcsv.api.Csv;
 import io.github.sekelenao.smallcsv.api.CsvConfiguration;
 import io.github.sekelenao.smallcsv.api.Row;
 import io.github.sekelenao.smallcsv.api.exception.CsvParsingException;
-
-import java.util.Objects;
 
 public final class CsvFormatter {
 
@@ -18,8 +20,8 @@ public final class CsvFormatter {
         private StringBuilder cell;
 
         private CsvBuffer() {
-            this.csv = new Csv();
-            this.row = new Row();
+            this.csv = Csv.empty();
+            this.row = Row.empty();
             this.cell = new StringBuilder();
         }
 
@@ -34,7 +36,7 @@ public final class CsvFormatter {
 
         private void pushRow(){
             csv.addLast(row);
-            row = new Row();
+            row = Row.empty();
         }
 
         private boolean notEmpty() {
@@ -105,6 +107,31 @@ public final class CsvFormatter {
                 else treatChar(buffer, c, line);
             }
             if(quoteState != QuoteState.IN){
+                buffer.pushCell();
+                buffer.pushRow();
+                quoteState = QuoteState.OUT;
+            } else {
+                buffer.appendToCell('\n');
+            }
+        }
+        if (quoteState == QuoteState.IN)
+            throw new CsvParsingException(buffer.row.toString());
+        return buffer.csv;
+    }
+
+    public Csv split(BufferedReader reader) throws IOException {
+        Objects.requireNonNull(reader);
+        quoteState = QuoteState.OUT;
+        var buffer = new CsvBuffer();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            var chars = line.toCharArray();
+            for (char c : chars) {
+                if (c == quote) treatQuote(buffer, line);
+                else if (c == delimiter) treatDelimiter(buffer);
+                else treatChar(buffer, c, line);
+            }
+            if (quoteState != QuoteState.IN) {
                 buffer.pushCell();
                 buffer.pushRow();
                 quoteState = QuoteState.OUT;

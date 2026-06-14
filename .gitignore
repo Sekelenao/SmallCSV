@@ -11,3 +11,9 @@ target/
 *.iml
 ### PERSONAL ###
 *.private
+
+### VS CODE ###
+.vscode/settings.json
+
+### Agents ###
+.agents/

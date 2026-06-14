@@ -33,14 +33,14 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/Sekelenao/SmallCSV.git</connection>
+        <connection>scm:git:https://github.com/Sekelenao/SmallCSV.git</connection>
         <developerConnection>scm:git:ssh://github.com/Sekelenao/SmallCSV.git</developerConnection>
         <url>https://github.com/Sekelenao/SmallCSV</url>
     </scm>
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/sekelenao/SmallYAML/issues</url>
+        <url>https://github.com/sekelenao/SmallCSV/issues</url>
     </issueManagement>
 
     <properties>
@@ -72,7 +72,6 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <test.minimum.coverage>0.90</test.minimum.coverage>
-        <minimum.maven.version>3.6.3</minimum.maven.version>
 
     </properties>
 

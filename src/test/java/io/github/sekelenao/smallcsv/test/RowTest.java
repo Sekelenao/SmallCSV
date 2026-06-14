@@ -1,6 +1,7 @@
 package io.github.sekelenao.smallcsv.test;
 
 import io.github.sekelenao.smallcsv.api.Csv;
+import io.github.sekelenao.smallcsv.api.Csvs;
 import io.github.sekelenao.smallcsv.api.Row;
 import io.github.sekelenao.smallcsv.api.CsvConfiguration;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 final class RowTest {
 
     private static Row helloWorldRow() {
-        var row = new Row("Hello", "world");
+        var row = Row.of("Hello", "world");
         row.add("!");
         return row;
     }
@@ -28,15 +29,16 @@ final class RowTest {
         @Test
         @DisplayName("Empty after default constructor")
         void byEmpty() {
-            assertEquals(0, new Row().size());
-            assertEquals("", new Row().toString());
+            assertEquals(0, Row.empty().size());
+            assertEquals("", Row.empty().toString());
+            assertInstanceOf(RandomAccess.class, Row.empty());
         }
 
         @ParameterizedTest
         @ValueSource(ints = {0, 1, 2, 100, 1000, 10000})
         @DisplayName("Constructor by size")
         void bySize(int size) {
-            var row = new Row(size);
+            var row = Row.empty(size);
             assertEquals(size, row.size());
             assertEquals(";".repeat(Math.max(size - 1, 0)), row.toString());
         }
@@ -44,20 +46,20 @@ final class RowTest {
         @Test
         @DisplayName("Constructor by size assertions")
         void bySizeAssertions() {
-            assertThrows(IllegalArgumentException.class, () -> new Row(-1));
+            assertThrows(IllegalArgumentException.class, () -> Row.empty(-1));
         }
 
         @Test
         @DisplayName("VarArgs constructor")
         void byVarArgs() {
             var array = new String[]{"", "Hello", "world", "!", "", ""};
-            var row = new Row(array);
+            var row = Row.of(array);
             assertAll("Simple operations",
-                    () -> assertEquals(4, new Row("", "Hello", "world", "!").size()),
+                    () -> assertEquals(4, Row.of("", "Hello", "world", "!").size()),
                     () -> assertEquals(";Hello;world;!;;", row.toString()),
-                    () -> assertEquals(0, new Row(new String[]{}).size()),
-                    () -> assertEquals("", new Row(new String[]{}).toString()),
-                    () -> assertEquals(1, new Row("").size())
+                    () -> assertEquals(0, Row.of(new String[]{}).size()),
+                    () -> assertEquals("", Row.of(new String[]{}).toString()),
+                    () -> assertEquals(1, Row.of("").size())
             );
         }
 
@@ -65,9 +67,9 @@ final class RowTest {
         @DisplayName("VarArgs constructor null assertions")
         void byVarArgsAssertions() {
             assertAll("VarArgs constructor null assertions",
-                    () -> assertThrows(NullPointerException.class, () -> new Row((String) null)),
-                    () -> assertThrows(NullPointerException.class, () -> new Row(new String[]{null})),
-                    () -> assertThrows(NullPointerException.class, () -> new Row(new String[]{"wrong", null}))
+                    () -> assertThrows(NullPointerException.class, () -> Row.of((String) null)),
+                    () -> assertThrows(NullPointerException.class, () -> Row.of(new String[]{null})),
+                    () -> assertThrows(NullPointerException.class, () -> Row.of(new String[]{"wrong", null}))
             );
         }
 
@@ -75,14 +77,14 @@ final class RowTest {
         @DisplayName("Collection constructor")
         void byCollection() {
             var helloWorldList = new ArrayList<>(List.of("", "Hello", "world", "!"));
-            var row = new Row(helloWorldList);
+            var row = Row.of(helloWorldList);
             assertAll("Simple operations",
                     () -> assertEquals(4, row.size()),
                     () -> assertEquals(";Hello;world;!", row.toString()),
-                    () -> assertEquals(0, new Row(Collections.emptyList()).size()),
-                    () -> assertEquals(1, new Row(List.of("")).size()),
-                    () -> assertEquals("", new Row(List.of("")).toString()),
-                    () -> assertEquals(";", new Row(List.of("", "")).toString())
+                    () -> assertEquals(0, Row.of(Collections.emptyList()).size()),
+                    () -> assertEquals(1, Row.of(List.of("")).size()),
+                    () -> assertEquals("", Row.of(List.of("")).toString()),
+                    () -> assertEquals(";", Row.of(List.of("", "")).toString())
             );
             helloWorldList.add("test");
             assertEquals(";Hello;world;!", row.toString());
@@ -95,26 +97,26 @@ final class RowTest {
             wrongList.add("wrong");
             wrongList.add(null);
             assertAll("NullPointer assertions",
-                    () -> assertThrows(NullPointerException.class, () -> new Row((List<String>) null)),
-                    () -> assertThrows(NullPointerException.class, () -> new Row(wrongList))
+                    () -> assertThrows(NullPointerException.class, () -> Row.of((List<String>) null)),
+                    () -> assertThrows(NullPointerException.class, () -> Row.of(wrongList))
             );
         }
 
         @Test
         @DisplayName("Iterable constructor")
         void byIterable() {
-            var otherRow = new Row(List.of("", "Hello", "world", "!"));
-            var row = new Row(otherRow);
+            var otherRow = Row.of(List.of("", "Hello", "world", "!"));
+            var row = Row.of(otherRow);
             assertAll("Simple operations",
                     () -> assertEquals(4, row.size()),
                     () -> assertEquals(";Hello;world;!", row.toString()),
-                    () -> assertEquals(0, new Row(new Row()).size()),
-                    () -> assertEquals(1, new Row(new Row("")).size()),
-                    () -> assertEquals("", new Row(new Row("")).toString()),
-                    () -> assertEquals(";", new Row(new Row("", "")).toString()),
-                    () -> assertEquals(";", new Row(new Row("", ""), 2).toString()),
-                    () -> assertEquals(";", new Row(new Row("", ""), 1).toString()),
-                    () -> assertEquals(";", new Row(new Row("", ""), 100).toString())
+                    () -> assertEquals(0, Row.of(Row.empty()).size()),
+                    () -> assertEquals(1, Row.of(Row.of("")).size()),
+                    () -> assertEquals("", Row.of(Row.of("")).toString()),
+                    () -> assertEquals(";", Row.of(Row.of("", "")).toString()),
+                    () -> assertEquals(";", Row.of(Row.of("", ""), 2).toString()),
+                    () -> assertEquals(";", Row.of(Row.of("", ""), 1).toString()),
+                    () -> assertEquals(";", Row.of(Row.of("", ""), 100).toString())
             );
             otherRow.add("test");
             assertEquals(";Hello;world;!", row.toString());
@@ -130,11 +132,11 @@ final class RowTest {
                 }
             };
             assertAll("NullPointer assertions",
-                    () -> assertThrows(NullPointerException.class, () -> new Row((Iterable<String>) null)),
-                    () -> assertThrows(NullPointerException.class, () -> new Row(nullIterable)),
-                    () -> assertThrows(NullPointerException.class, () -> new Row(nullIterable, 0)),
-                    () -> assertThrows(NullPointerException.class, () -> new Row(null, 0)),
-                    () -> assertThrows(IllegalArgumentException.class, () -> new Row(nullIterable, -1))
+                    () -> assertThrows(NullPointerException.class, () -> Row.of((Iterable<String>) null)),
+                    () -> assertThrows(NullPointerException.class, () -> Row.of(nullIterable)),
+                    () -> assertThrows(NullPointerException.class, () -> Row.of(nullIterable, 0)),
+                    () -> assertThrows(NullPointerException.class, () -> Row.of(null, 0)),
+                    () -> assertThrows(IllegalArgumentException.class, () -> Row.of(nullIterable, -1))
             );
         }
 
@@ -147,7 +149,7 @@ final class RowTest {
         @Test
         @DisplayName("Is empty test")
         void isEmptyOrBlank() {
-            var row = new Row();
+            var row = Row.empty();
             assertAll("Empty tests",
                     () -> assertTrue(row.isEmpty()),
                     () -> {
@@ -167,7 +169,7 @@ final class RowTest {
         @Test
         @DisplayName("add")
         void add() {
-            var row = new Row();
+            var row = Row.empty();
             row.add("Hello");
             row.add("world");
             row.add("!");
@@ -183,14 +185,14 @@ final class RowTest {
         @Test
         @DisplayName("add null assertions")
         void addNullAssertions() {
-            var emptyRow = new Row();
+            var emptyRow = Row.empty();
             assertThrows(NullPointerException.class, () -> emptyRow.add(null));
         }
 
         @Test
         @DisplayName("Add all null assertions")
         void addAllNullAssertions() {
-            var emptyRow = new Row();
+            var emptyRow = Row.empty();
             var lst = Collections.singleton((String) null);
             assertAll("Add all null",
                     () -> assertThrows(NullPointerException.class, () -> emptyRow.addAll((Iterable<String>) null)),
@@ -209,7 +211,7 @@ final class RowTest {
         @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7})
         @DisplayName("Set all indices working")
         void setAllIndices(int index) {
-            var row = Csv.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
+            var row = Csvs.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
             assertAll("Set all indices",
                     () -> {
                         row.set(index, "replaced");
@@ -222,8 +224,8 @@ final class RowTest {
         @Test
         @DisplayName("Set indices assertions")
         void setAllIndicesAssertions() {
-            var emptyRow = new Row();
-            var row = Csv.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
+            var emptyRow = Row.empty();
+            var row = Csvs.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
             assertAll("Set indices assertions",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> row.set(-1, "wrong")),
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> row.set(8, "wrong")),
@@ -234,7 +236,7 @@ final class RowTest {
         @Test
         @DisplayName("Set null assertions")
         void setNullAssertions() {
-            var row = new Row("One");
+            var row = Row.of("One");
             assertThrows(NullPointerException.class, () -> row.set(0, null));
         }
 
@@ -247,7 +249,7 @@ final class RowTest {
         @ValueSource(ints = {1, 2, 8, 100, 1000})
         @DisplayName("Fill basic test")
         void fill(int size) {
-            var row = new Row();
+            var row = Row.empty();
             row.fill(size);
             assertAll("Fill",
                     () -> assertEquals(size, row.size()),
@@ -263,7 +265,7 @@ final class RowTest {
         @ValueSource(ints = {-1, -2, -100})
         @DisplayName("Fill assertions")
         void fillAssertions(int size) {
-            var emptyRow = new Row();
+            var emptyRow = Row.empty();
             assertAll("Fill assertions",
                     () -> assertThrows(IllegalArgumentException.class, () -> emptyRow.fill(size))
             );
@@ -278,15 +280,15 @@ final class RowTest {
         @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7})
         @DisplayName("Get all indices working")
         void getAllIndices(int index) {
-            var row = Csv.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
+            var row = Csvs.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
             assertEquals(String.valueOf(index), row.get(index));
         }
 
         @Test
         @DisplayName("Get indices assertions")
         void getAllIndicesAssertions() {
-            var emptyRow = new Row();
-            var row = Csv.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
+            var emptyRow = Row.empty();
+            var row = Csvs.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
             assertAll("Set indices assertions",
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> row.get(-1)),
                     () -> assertThrows(IndexOutOfBoundsException.class, () -> row.get(8)),
@@ -297,7 +299,7 @@ final class RowTest {
         @Test
         @DisplayName("Get first and last")
         void getFirstAndLast() {
-            var row = Csv.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
+            var row = Csvs.from(Collections.singleton("0;1;2;3;4;5;6;7")).getFirst();
             assertAll("Get first and last",
                     () -> assertEquals("0", row.getFirst()),
                     () -> assertEquals("7", row.getLast())
@@ -307,7 +309,7 @@ final class RowTest {
         @Test
         @DisplayName("Get indices assertions")
         void getFirstAndLastAssertions() {
-            var emptyRow = new Row();
+            var emptyRow = Row.empty();
             assertAll("Get first and last assertions",
                     () -> assertThrows(NoSuchElementException.class, emptyRow::getFirst),
                     () -> assertThrows(NoSuchElementException.class, emptyRow::getLast)
@@ -326,7 +328,7 @@ final class RowTest {
             }
         }
 
-        private static final Row ROW = Csv.from(Collections.singleton("1;3;5;7;9")).getFirst();
+        private static final Row ROW = Csvs.from(Collections.singleton("1;3;5;7;9")).getFirst();
 
         @ParameterizedTest
         @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
@@ -342,7 +344,7 @@ final class RowTest {
         @Test
         @DisplayName("Contains with custom equals")
         void containsWithCustomEquals() {
-            var row = new Row("Hey", "a quote is a quote");
+            var row = Row.of("Hey", "a quote is a quote");
             assertAll("Contains with custom equals",
                     () -> assertTrue(row.contains(new Citation("a quote is a quote"))),
                     () -> assertTrue(row.contains("a quote is a quote")),
@@ -368,7 +370,7 @@ final class RowTest {
         @Test
         @DisplayName("ForEach null assertions")
         void forEachNullAssertions() {
-            var emptyRow = new Row();
+            var emptyRow = Row.empty();
             assertThrows(NullPointerException.class, () -> emptyRow.forEach(null));
         }
 
@@ -381,7 +383,7 @@ final class RowTest {
         @Test
         @DisplayName("Empty iterator")
         void emptyIterator() {
-            var row = new Row();
+            var row = Row.empty();
             var it = row.iterator();
             assertAll(
                 () -> assertFalse(it.hasNext()),
@@ -406,7 +408,7 @@ final class RowTest {
         void iterator() {
             var row = helloWorldRow();
             var it = row.iterator();
-            var emptyIt = new Row().iterator();
+            var emptyIt = Row.empty().iterator();
             assertAll("Iterator is working",
                     () -> assertTrue(it.hasNext()),
                     () -> assertTrue(it.hasNext()),
@@ -464,7 +466,7 @@ final class RowTest {
         @DisplayName("Stream basic tests")
         void stream() {
             var lst = new ArrayList<String>();
-            var emptyRow = new Row();
+            var emptyRow = Row.empty();
             var row = helloWorldRow();
             row.stream().filter(s -> s.length() > 1).forEach(lst::add);
             var newRow = row.stream().parallel().filter(s -> s.length() > 1).collect(Row.collector());
@@ -514,13 +516,13 @@ final class RowTest {
         @Test
         @DisplayName("Collector is working")
         void collector() {
-            var row = new Row("x", "y", "z", "x", "z", "y");
+            var row = Row.of("x", "y", "z", "x", "z", "y");
             var row2 = row.stream()
                     .filter(s -> !s.equals("z"))
                     .collect(Row.collector());
             var row3 = row.stream().collect(Row.collector());
             assertAll("Collector",
-                    () -> assertEquals(new Row("x", "y", "x", "y"), row2),
+                    () -> assertEquals(Row.of("x", "y", "x", "y"), row2),
                     () -> assertEquals(row, row3)
             );
         }
@@ -586,29 +588,29 @@ final class RowTest {
         @DisplayName("Escape chars toString")
         void toStringEscapeChars() {
             assertAll("Escape chars assertions",
-                    () -> assertEquals("\\n;", new Row("\\n", "").toString()),
-                    () -> assertEquals("\t;tab", new Row("\t", "tab").toString())
+                    () -> assertEquals("\\n;", Row.of("\\n", "").toString()),
+                    () -> assertEquals("\t;tab", Row.of("\t", "tab").toString())
             );
         }
 
         @Test
         @DisplayName("toString basic tests")
         void toStringBasicTests() {
-            var row = new Row("Hello\"", "world", "!", ";", "");
+            var row = Row.of("Hello\"", "world", "!", ";", "");
             var rowAsString = row.toString();
             assertAll("toString basic tests",
                     () -> assertEquals("\"Hello\"\"\";world;!;\";\";", rowAsString),
-                    () -> assertEquals(row, Csv.from(Collections.singleton("\"Hello\"\"\";world;!;\";\";")).getFirst()),
+                    () -> assertEquals(row, Csvs.from(Collections.singleton("\"Hello\"\"\";world;!;\";\";")).getFirst()),
                     () -> assertEquals(row.toString(), rowAsString),
-                    () -> assertEquals("\"\"\"\"", Csv.from(Collections.singleton("\"\"\"\"")).getFirst().toString())
+                    () -> assertEquals("\"\"\"\"", Csvs.from(Collections.singleton("\"\"\"\"")).getFirst().toString())
             );
         }
 
         @Test
         @DisplayName("toString with custom config")
         void toStringWithConfig() {
-            var row = new Row("Hello\"", "world", "!", ";", "");
-            var otherRow = new Row("Hello'", "world", "!", ",", "'");
+            var row = Row.of("Hello\"", "world", "!", ";", "");
+            var otherRow = Row.of("Hello'", "world", "!", ",", "'");
             assertAll("toString custom config",
                     () -> assertEquals("\"Hello\"\"\";world;!;\";\";", row.toString()),
                     () -> assertEquals("\"Hello\"\"\",world,!,;,", row.toString(CsvConfiguration.COMMA)),
@@ -620,7 +622,7 @@ final class RowTest {
         @Test
         @DisplayName("toString with newlines")
         void toStringWithNewlines() {
-            var row = new Row("hey", "cool\ncool");
+            var row = Row.of("hey", "cool\ncool");
             assertEquals("""
                     hey;"cool
                     cool\"""", row.toString());

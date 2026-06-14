@@ -60,19 +60,12 @@ public class Row implements Iterable<String>, RandomAccess {
 
 
     /**
-     * Constructs an empty SkCsvRow with a default initial capacity.
-     */
-    public Row() {
-        this.cells = new String[DEFAULT_CAPACITY];
-    }
-
-    /**
-     * Constructs an empty SkCsvRow with the specified initial capacity.
+     * Constructs an empty Row with the specified initial capacity.
      *
      * @param amount the initial capacity of the row
      * @throws IllegalArgumentException if the specified amount is not positive
      */
-    public Row(int amount) {
+    private Row(int amount) {
         Assertions.positive(amount);
         this.cells = new String[amount];
         Arrays.fill(cells, "");
@@ -80,31 +73,31 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Constructs an SkCsvRow initialized with the specified array of strings.
-     * The provided array is copied, so subsequent changes to the array do not affect the SkCsvRow.
+     * Constructs a Row initialized with the specified array of strings.
+     * The provided array is copied, so subsequent changes to the array do not affect the Row.
      *
      * @param array the array of strings to initialize the row
      * @throws NullPointerException if the specified array or any of its elements is null
      */
-    public Row(String... array) {
+    private Row(String... array) {
         Objects.requireNonNull(array);
-        this.cells = new String[array.length];
+        this.cells = new String[array.length == 0 ? DEFAULT_CAPACITY : array.length];
         for (var value : array) {
             this.cells[size++] = Objects.requireNonNull(value);
         }
     }
 
     /**
-     * Constructs an SkCsvRow initialized with the specified collection of strings.
-     * The provided collection is copied, so subsequent changes to the collection do not affect the SkCsvRow.
+     * Constructs a Row initialized with the specified collection of strings.
+     * The provided collection is copied, so subsequent changes to the collection do not affect the Row.
      *
      * @param collection the collection of strings to initialize the row
      * @throws NullPointerException if the specified collection or any of its elements is null
      */
-    public Row(Collection<String> collection) {
+    private Row(Collection<String> collection) {
         Objects.requireNonNull(collection);
         this.cells = new String[collection.size()];
-        for(var value : collection){
+        for (var value : collection) {
             this.cells[size++] = Objects.requireNonNull(value);
         }
     }
@@ -117,9 +110,9 @@ public class Row implements Iterable<String>, RandomAccess {
      * @throws OutOfMemoryError if the required new size exceeds the maximum array size
      */
     private void growIfNecessary(int amount) {
-        if(size + amount > cells.length){
+        if (size + amount > cells.length) {
             var newLength = size + Math.max(GROWING_AMOUNT, amount);
-            if(newLength <= 0){
+            if (newLength <= 0) {
                 throw new OutOfMemoryError("Required row size is too large");
             }
             cells = Arrays.copyOf(cells, newLength);
@@ -127,8 +120,8 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Constructs an SkCsvRow initialized with the specified iterable of strings and an estimated size.
-     * The provided iterable is copied, so subsequent changes to the iterable do not affect the SkCsvRow.
+     * Constructs a Row initialized with the specified iterable of strings and an estimated size.
+     * The provided iterable is copied, so subsequent changes to the iterable do not affect the Row.
      * This constructor may optimize allocations if an estimated size is given.
      *
      * @param iterable the iterable of strings to initialize the row
@@ -136,11 +129,11 @@ public class Row implements Iterable<String>, RandomAccess {
      * @throws NullPointerException if the specified iterable or any of its elements is null
      * @throws IllegalArgumentException if the specified estimated size is not positive
      */
-    public Row(Iterable<String> iterable, int estimatedSize) {
+    private Row(Iterable<String> iterable, int estimatedSize) {
         Objects.requireNonNull(iterable);
         Assertions.positive(estimatedSize);
         this.cells = new String[estimatedSize];
-        for (var value : iterable){
+        for (var value : iterable) {
             Objects.requireNonNull(value);
             growIfNecessary(1);
             this.cells[size++] = value;
@@ -148,19 +141,78 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Constructs an SkCsvRow initialized with the specified iterable of strings.
-     * The provided iterable is copied, so subsequent changes to the iterable do not affect the SkCsvRow.
-     * If an estimated size is known, use {@link #Row(Iterable, int)}, as it may optimize allocations.
+     * Creates an empty Row with a default initial capacity.
      *
-     * @param iterable the iterable of strings to initialize the row
-     * @throws NullPointerException if the specified iterable or any of its elements is null
+     * @return a new empty Row instance
      */
-    public Row(Iterable<String> iterable) {
-        this(iterable, 0);
+    public static Row empty() {
+        return new Row();
     }
 
     /**
-     * Returns the number of elements in this SkCsvRow.
+     * Creates an empty Row with the specified initial capacity.
+     *
+     * @param size the initial capacity of the row
+     * @return a new empty Row instance of the specified size
+     * @throws IllegalArgumentException if the specified size is not positive
+     */
+    public static Row empty(int size) {
+        return new Row(size);
+    }
+
+    /**
+     * Creates a Row initialized with the specified array of strings.
+     * The provided array is copied, so subsequent changes to the array do not affect the Row.
+     *
+     * @param array the array of strings to initialize the row
+     * @return a new Row instance containing the specified strings
+     * @throws NullPointerException if the specified array or any of its elements is null
+     */
+    public static Row of(String... array) {
+        return new Row(array);
+    }
+
+    /**
+     * Creates a Row initialized with the specified collection of strings.
+     * The provided collection is copied, so subsequent changes to the collection do not affect the Row.
+     *
+     * @param collection the collection of strings to initialize the row
+     * @return a new Row instance containing the specified strings
+     * @throws NullPointerException if the specified collection or any of its elements is null
+     */
+    public static Row of(Collection<String> collection) {
+        return new Row(collection);
+    }
+
+    /**
+     * Creates a Row initialized with the specified iterable of strings.
+     * The provided iterable is copied, so subsequent changes to the iterable do not affect the Row.
+     *
+     * @param iterable the iterable of strings to initialize the row
+     * @return a new Row instance containing the specified strings
+     * @throws NullPointerException if the specified iterable or any of its elements is null
+     */
+    public static Row of(Iterable<String> iterable) {
+        return new Row(iterable, 0);
+    }
+
+    /**
+     * Creates a Row initialized with the specified iterable of strings and an estimated size.
+     * The provided iterable is copied, so subsequent changes to the iterable do not affect the Row.
+     * This method may optimize allocations if an estimated size is given.
+     *
+     * @param iterable the iterable of strings to initialize the row
+     * @param estimatedSize the estimated size of the iterable
+     * @return a new Row instance containing the specified strings
+     * @throws NullPointerException if the specified iterable or any of its elements is null
+     * @throws IllegalArgumentException if the specified estimated size is not positive
+     */
+    public static Row of(Iterable<String> iterable, int estimatedSize) {
+        return new Row(iterable, estimatedSize);
+    }
+
+    /**
+     * Returns the number of elements in this Row.
      *
      * @return the number of elements in this row
      */
@@ -169,7 +221,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns {@code true} if this SkCsvRow contains no elements.
+     * Returns {@code true} if this Row contains no elements.
      *
      * @return {@code true} if this row contains no elements, {@code false} otherwise
      */
@@ -178,7 +230,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Adds the specified value to the end of this SkCsvRow.
+     * Adds the specified value to the end of this Row.
      *
      * @param value the value to be added to the row
      * @throws NullPointerException if the specified value is null
@@ -191,7 +243,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Adds all the elements from the specified array to the end of this SkCsvRow.
+     * Adds all the elements from the specified array to the end of this Row.
      *
      * @param array the array of strings to be added to the row
      * @throws NullPointerException if the specified array or any of its elements is null
@@ -206,7 +258,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Adds all the elements from the specified collection to the end of this SkCsvRow.
+     * Adds all the elements from the specified collection to the end of this Row.
      *
      * @param collection the collection of strings to be added to the row
      * @throws NullPointerException if the specified collection or any of its elements is null
@@ -221,7 +273,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Adds all the elements from the specified iterable of strings to the end of this SkCsvRow.
+     * Adds all the elements from the specified iterable of strings to the end of this Row.
      * This method may optimize allocations if an estimated size is given.
      *
      * @param iterable the iterable of strings to be added to the row
@@ -242,7 +294,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Adds all the elements from the specified iterable of strings to the end of this SkCsvRow.
+     * Adds all the elements from the specified iterable of strings to the end of this Row.
      * If an estimated size is known, use {@link #addAll(Iterable, int)} as it may optimize allocations.
      *
      * @param iterable the iterable of strings to be added to the row
@@ -254,7 +306,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Sets the value at the specified index in this SkCsvRow.
+     * Sets the value at the specified index in this Row.
      *
      * @param index the index of the element to set
      * @param value the new value to set at the specified index
@@ -268,7 +320,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Fills the SkCsvRow with the specified amount of empty values.
+     * Fills the Row with the specified amount of empty values.
      *
      * @param amount the number of empty values to fill
      * @throws IllegalArgumentException if the specified amount is not positive
@@ -282,7 +334,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns the value at the specified index in this SkCsvRow.
+     * Returns the value at the specified index in this Row.
      *
      * @param index the index of the element to return
      * @return the value at the specified index
@@ -294,7 +346,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns the first value in this SkCsvRow.
+     * Returns the first value in this Row.
      *
      * @return the first value in this row
      * @throws NoSuchElementException if this row is empty
@@ -305,7 +357,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns the last value in this SkCsvRow.
+     * Returns the last value in this Row.
      *
      * @return the last value in this row
      * @throws NoSuchElementException if this row is empty
@@ -329,7 +381,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns an iterator over the elements in this SkCsvRow.
+     * Returns an iterator over the elements in this Row.
      * The iterator traverses the elements of the row in the order they were added.
      *
      * @return an iterator over the elements in this row
@@ -357,7 +409,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Performs the given action for each element of this SkCsvRow until all elements have been processed or the action
+     * Performs the given action for each element of this Row until all elements have been processed or the action
      * throws an exception.
      *
      * @param action the action to be performed for each element
@@ -377,7 +429,7 @@ public class Row implements Iterable<String>, RandomAccess {
      * @param start the starting index of the range (inclusive)
      * @param end the ending index of the range (exclusive)
      * @param array the array containing the elements
-     * @param v the version of the SkCsvRow to check for concurrent modifications
+     * @param v the version of the Row to check for concurrent modifications
      * @return a Spliterator for the specified range of elements in the array
      */
     private Spliterator<String> customSpliterator(int start, int end, String[] array, int v) {
@@ -432,12 +484,12 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns a {@code Spliterator} over the rows in this SkCsv instance.
+     * Returns a {@code Spliterator} over the elements in this Row instance.
      *
      * <p><strong>Note:</strong> The {@code Spliterator} provided by this method is {@link Spliterator#NONNULL},
      * {@link Spliterator#SIZED}, and {@link Spliterator#ORDERED}.
      *
-     * @return a {@code Spliterator} over the rows in this SkCsv instance
+     * @return a {@code Spliterator} over the elements in this Row instance
      */
     @Override
     public Spliterator<String> spliterator() {
@@ -445,7 +497,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Applies the specified function to each element in this SkCsvRow, replacing each element with the result of the
+     * Applies the specified function to each element in this Row, replacing each element with the result of the
      * function.
      *
      * @param mapper the function to apply to each element
@@ -459,7 +511,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns a sequential Stream of the elements in this SkCsvRow.
+     * Returns a sequential Stream of the elements in this Row.
      * The Stream traverses the elements of the row in the order they were added.
      *
      * @return a sequential Stream of the elements in this row
@@ -469,9 +521,9 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns a Collector that accumulates the input elements into a new SkCsvRow.
+     * Returns a Collector that accumulates the input elements into a new Row.
      *
-     * @return a Collector that accumulates elements into a new SkCsvRow
+     * @return a Collector that accumulates elements into a new Row
      */
     public static Collector<String, ?, Row> collector(){
         return Collector.of(
@@ -482,14 +534,14 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Indicates whether some other object is "equal to" this SkCsvRow instance.
+     * Indicates whether some other object is "equal to" this Row instance.
      *
-     * <p>This method returns {@code true} if the specified object is also a SkCsvRow instance,
+     * <p>This method returns {@code true} if the specified object is also a Row instance,
      * both instances have the same size, and all corresponding elements are equal.
-     * In other words, two SkCsvRow instances are defined to be equal if they contain the same elements in the same order.
+     * In other words, two Row instances are defined to be equal if they contain the same elements in the same order.
      *
      * @param other the reference object with which to compare
-     * @return {@code true} if this SkCsvRow instance is equal to the specified object, {@code false} otherwise
+     * @return {@code true} if this Row instance is equal to the specified object, {@code false} otherwise
      */
     @Override
     public boolean equals(Object other) {
@@ -503,7 +555,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns a hash code value for this SkCsvRow.
+     * Returns a hash code value for this Row.
      * The hash code is computed based on the size of the row and the hash codes of its elements.
      *
      * @return a hash code value for this row
@@ -518,7 +570,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns a CSV string representation of this SkCsvRow using the default configuration.
+     * Returns a CSV string representation of this Row using the default configuration.
      * The text is formatted according to the CSV format, where elements are separated by a delimiter and enclosed in
      * quotes if necessary.
      * This method uses the {@link CsvConfiguration#SEMICOLON SEMICOLON} configuration by default, which uses a semicolon as
@@ -533,7 +585,7 @@ public class Row implements Iterable<String>, RandomAccess {
     }
 
     /**
-     * Returns a CSV string representation of this SkCsvRow using the specified configuration.
+     * Returns a CSV string representation of this Row using the specified configuration.
      * The text is formatted according to the CSV format, where elements are separated by a delimiter and enclosed in
      * quotes if necessary.
      *
