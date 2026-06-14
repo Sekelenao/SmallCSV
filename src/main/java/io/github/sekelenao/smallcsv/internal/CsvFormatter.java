@@ -95,24 +95,28 @@ public final class CsvFormatter {
         }
     }
 
+    private void computeLine(CsvBuffer buffer, String line) {
+        var chars = line.toCharArray();
+        for (char c : chars) {
+            if (c == quote) treatQuote(buffer, line);
+            else if (c == delimiter) treatDelimiter(buffer);
+            else treatChar(buffer, c, line);
+        }
+        if (quoteState != QuoteState.IN) {
+            buffer.pushCell();
+            buffer.pushRow();
+            quoteState = QuoteState.OUT;
+        } else {
+            buffer.appendToCell('\n');
+        }
+    }
+
     public Csv split(Iterable<String> lines){
         Objects.requireNonNull(lines);
         quoteState = QuoteState.OUT;
         var buffer = new CsvBuffer();
         for(var line : lines){
-            var chars = line.toCharArray();
-            for (char c : chars) {
-                if (c == quote) treatQuote(buffer, line);
-                else if (c == delimiter) treatDelimiter(buffer);
-                else treatChar(buffer, c, line);
-            }
-            if(quoteState != QuoteState.IN){
-                buffer.pushCell();
-                buffer.pushRow();
-                quoteState = QuoteState.OUT;
-            } else {
-                buffer.appendToCell('\n');
-            }
+            computeLine(buffer, line);
         }
         if (quoteState == QuoteState.IN)
             throw new CsvParsingException(buffer.row.toString());
@@ -125,19 +129,7 @@ public final class CsvFormatter {
         var buffer = new CsvBuffer();
         String line;
         while ((line = reader.readLine()) != null) {
-            var chars = line.toCharArray();
-            for (char c : chars) {
-                if (c == quote) treatQuote(buffer, line);
-                else if (c == delimiter) treatDelimiter(buffer);
-                else treatChar(buffer, c, line);
-            }
-            if (quoteState != QuoteState.IN) {
-                buffer.pushCell();
-                buffer.pushRow();
-                quoteState = QuoteState.OUT;
-            } else {
-                buffer.appendToCell('\n');
-            }
+            computeLine(buffer, line);
         }
         if (quoteState == QuoteState.IN)
             throw new CsvParsingException(buffer.row.toString());
